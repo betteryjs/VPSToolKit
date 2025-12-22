@@ -269,8 +269,10 @@ load_submenu_from_toml() {
     MENU_IDS=()
     MENU_TITLES=()
     declare -gA MENU_ACTIONS
+    declare -gA MENU_CHILDREN
     
     if [ ! -f "$toml_file" ]; then
+        echo "Error: TOML file not found: $toml_file" >&2
         return 1
     fi
     
