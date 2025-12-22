@@ -32,6 +32,7 @@ declare -ga MENU_TITLES
 declare -gA MENU_SCRIPTS
 current_selection=0
 current_menu="main"
+parent_menu_title=""
 
 # 解析 TOML 数组
 parse_toml_array() {
@@ -104,6 +105,7 @@ load_main_menu() {
     MENU_IDS=()
     MENU_TITLES=()
     MENU_SCRIPTS=()
+    parent_menu_title=""
     
     local menu_file="${MODULES_DIR}/menu.toml"
     
@@ -134,25 +136,48 @@ load_submenu() {
     MENU_TITLES=()
     MENU_SCRIPTS=()
     
+    # 获取并缓存父菜单标题
+    local menu_file="${MODULES_DIR}/menu.toml"
+    local ids=$(parse_toml_array "$menu_file" "sub_menus")
+    local titles=$(parse_toml_array "$menu_file" "titles")
+    
+    local id_array=()
+    local title_array=()
+    
+    while IFS= read -r line; do
+        [ -n "$line" ] && id_array+=("$line")
+    done <<< "$ids"
+    
+    while IFS= read -r line; do
+        [ -n "$line" ] && title_array+=("$line")
+    done <<< "$titles"
+    
+    for i in "${!id_array[@]}"; do
+        if [ "${id_array[$i]}" = "$menu_id" ]; then
+            parent_menu_title="${title_array[$i]}"
+            break
+        fi
+    done
+    
     # 查找对应的配置文件
-    local menu_file=""
+    local submenu_file=""
     for file in "${MODULES_DIR}"/*.toml; do
         [ -f "$file" ] || continue
         [ "$(basename "$file")" = "menu.toml" ] && continue
         
         if grep -q "^id = \"$menu_id\"" "$file"; then
-            menu_file="$file"
+            submenu_file="$file"
             break
         fi
     done
     
-    if [ -z "$menu_file" ]; then
+    if [ -z "$submenu_file" ]; then
         echo -e "${Red}[错误]${Reset} 未找到菜单配置"
         return 1
     fi
     
     # 读取子菜单项
-    local item_ids=$(parse_toml_array "$menu_file" "sub_menus")
+    local item_ids=$(parse_toml_array "$submenu_file" "sub_menus")
     
     while IFS= read -r item_id; do
         [ -z "$item_id" ] && continue
@@ -160,15 +185,15 @@ load_submenu() {
         MENU_IDS+=("$item_id")
         
         # 读取标题
-        local title=$(parse_menu_item "$menu_file" "$item_id" "title")
+        local title=$(parse_menu_item "$submenu_file" "$item_id" "title")
         MENU_TITLES+=("$title")
         
         # 读取脚本 key
-        local script_key=$(parse_menu_item "$menu_file" "$item_id" "script")
+        local script_key=$(parse_menu_item "$submenu_file" "$item_id" "script")
         
         # 通过 key 获取脚本路径
         if [ -n "$script_key" ]; then
-            local script_path=$(parse_toml_value "$menu_file" "scripts" "$script_key")
+            local script_path=$(parse_toml_value "$submenu_file" "scripts" "$script_key")
             MENU_SCRIPTS["$item_id"]="$script_path"
         fi
     done <<< "$item_ids"
@@ -190,34 +215,6 @@ get_script_url() {
     fi
 }
 
-# 获取一级菜单标题
-get_parent_menu_title() {
-    local menu_id=$1
-    local menu_file="${MODULES_DIR}/menu.toml"
-    
-    # 读取主菜单的 sub_menus 和 titles
-    local ids=$(parse_toml_array "$menu_file" "sub_menus")
-    local titles=$(parse_toml_array "$menu_file" "titles")
-    
-    local id_array=()
-    local title_array=()
-    
-    while IFS= read -r line; do
-        [ -n "$line" ] && id_array+=("$line")
-    done <<< "$ids"
-    
-    while IFS= read -r line; do
-        [ -n "$line" ] && title_array+=("$line")
-    done <<< "$titles"
-    
-    for i in "${!id_array[@]}"; do
-        if [ "${id_array[$i]}" = "$menu_id" ]; then
-            echo "${title_array[$i]}"
-            return
-        fi
-    done
-}
-
 # 渲染菜单
 render_menu() {
     clear
@@ -228,9 +225,8 @@ render_menu() {
         echo -e "${Cyan}       VPSToolKit 主菜单${Reset}"
         echo -e "${Cyan}======================================${Reset}"
     else
-        local parent_title=$(get_parent_menu_title "$current_menu")
         echo -e "${Cyan}======================================${Reset}"
-        echo -e "${Cyan}   主菜单 ${Yellow}>${Reset} ${Green}${parent_title}${Reset}"
+        echo -e "${Cyan}   主菜单 ${Yellow}>${Reset} ${Green}${parent_menu_title}${Reset}"
         echo -e "${Cyan}======================================${Reset}"
     fi
     
@@ -264,13 +260,21 @@ render_menu() {
     echo -e "${Cyan}======================================${Reset}"
     echo -e "使用 ${Green}↑/↓${Reset} 或 ${Green}j/k${Reset} 选择，${Green}Enter${Reset} 确认"
     
-    # 如果是二级菜单且有选中项，显示脚本执行预览
+    # 如果是二级菜单且有选中项，显示脚本执行预览（使用缓存的数据）
     if [ "$current_menu" != "main" ] && [ $current_selection -lt ${#MENU_IDS[@]} ]; then
         local selected_id="${MENU_IDS[$current_selection]}"
         local script_path="${MENU_SCRIPTS[$selected_id]}"
         
         if [ -n "$script_path" ]; then
-            local script_url=$(get_script_url "$script_path")
+            # 直接使用缓存的数据，不再重复调用 get_script_url
+            if [[ "$script_path" =~ ^https?:// ]]; then
+                local script_url="$script_path"
+            elif [[ "${VTK_DOWNLOAD_SOURCE}" == "oss" ]]; then
+                local script_url="https://oss.naloong.de/VPSToolKit/${script_path}"
+            else
+                local script_url="https://raw.githubusercontent.com/betteryjs/VPSToolKit/master/${script_path}"
+            fi
+            
             echo ""
             echo -e "${Yellow}[执行预览]${Reset}"
             echo -e "${Cyan}脚本地址：${Reset}${script_url}"
