@@ -103,6 +103,8 @@ ${Green}重新安装：${Reset}
 
 
   bash <(curl -sL https://raw.githubusercontent.com/betteryjs/VPSToolKit/refs/heads/master/uninstall.sh)
+
+
 ========================================
 感谢使用 VPSToolKit！
 ========================================
