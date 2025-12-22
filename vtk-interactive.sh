@@ -429,9 +429,17 @@ load_menu() {
     # 自动查找对应的 TOML 文件并加载
     local toml_file=$(find_toml_for_menu "$menu_id")
     if [ -n "$toml_file" ]; then
+        # 调试信息
+        # echo "Debug: Loading menu $menu_id from $toml_file" >&2
         load_submenu_from_toml "$menu_id" "$toml_file"
     else
         echo "Error: Cannot find TOML configuration for menu: $menu_id" >&2
+        # 加载失败时，保持当前菜单不变，返回上级
+        if [ ${#menu_stack[@]} -gt 0 ]; then
+            current_menu="${menu_stack[-1]}"
+            unset 'menu_stack[-1]'
+            load_menu "$current_menu"
+        fi
         return 1
     fi
 }
