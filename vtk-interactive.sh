@@ -19,6 +19,7 @@ Reset="\033[0m"
 # 配置文件路径
 CONFIG_DIR="/etc/vpstoolkit"
 CONFIG_FILE="${CONFIG_DIR}/config.toml"
+SCRIPTS_DIR="/usr/local/vpstoolkit/scripts"
 
 # 菜单项数组
 declare -a MENU_IDS
@@ -30,6 +31,46 @@ declare -A MENU_CHILDREN
 current_selection=0
 current_menu="main"
 menu_stack=()
+
+# 检查并下载脚本
+check_and_download_script() {
+    local script_path=$1
+    local script_name="${script_path#${SCRIPTS_DIR}/}"
+    
+    if [[ -f "$script_path" ]]; then
+        return 0
+    fi
+    
+    echo -e "${Yellow_font}[提示]${Reset} 脚本 ${script_name} 不存在，正在从远程下载..."
+    
+    # 确保目录存在
+    mkdir -p "$(dirname "$script_path")"
+    
+    # 根据环境变量或默认值选择下载源
+    local download_source="${VTK_DOWNLOAD_SOURCE:-github}"
+    local download_url
+    
+    if [[ "${download_source}" == "oss" ]]; then
+        download_url="https://oss.naloong.de/VPSToolKit/scripts/${script_name}"
+    else
+        download_url="https://raw.githubusercontent.com/betteryjs/VPSToolKit/master/scripts/${script_name}"
+    fi
+    
+    echo -e "${Yellow_font}[提示]${Reset} 下载地址：${download_url}"
+    
+    wget --no-check-certificate -O "$script_path" "$download_url" 2>&1
+    
+    if [[ $? -eq 0 && -f "$script_path" ]]; then
+        chmod +x "$script_path"
+        echo -e "${Green_font}[成功]${Reset} 脚本下载成功！"
+        sleep 1
+        return 0
+    else
+        echo -e "${Red_font}[错误]${Reset} 脚本下载失败！"
+        sleep 2
+        return 1
+    fi
+}
 
 # 清屏并隐藏光标
 hide_cursor() {
@@ -293,6 +334,17 @@ handle_selection() {
         clear
         echo -e "${Green_font}正在执行: ${MENU_TITLES[$current_selection]}${Reset}"
         echo ""
+        
+        # 检查并下载脚本（如果需要）
+        if ! check_and_download_script "$action"; then
+            echo ""
+            echo -e "${Yellow_font}按回车键返回菜单...${Reset}"
+            read
+            hide_cursor
+            return
+        fi
+        
+        # 执行脚本
         bash "$action"
         echo ""
         echo -e "${Yellow_font}按回车键返回菜单...${Reset}"
