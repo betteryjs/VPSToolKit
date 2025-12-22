@@ -190,34 +190,6 @@ get_script_url() {
     fi
 }
 
-# 获取一级菜单标题
-get_parent_menu_title() {
-    local menu_id=$1
-    local menu_file="${MODULES_DIR}/menu.toml"
-    
-    # 读取主菜单的 sub_menus 和 titles
-    local ids=$(parse_toml_array "$menu_file" "sub_menus")
-    local titles=$(parse_toml_array "$menu_file" "titles")
-    
-    local id_array=()
-    local title_array=()
-    
-    while IFS= read -r line; do
-        [ -n "$line" ] && id_array+=("$line")
-    done <<< "$ids"
-    
-    while IFS= read -r line; do
-        [ -n "$line" ] && title_array+=("$line")
-    done <<< "$titles"
-    
-    for i in "${!id_array[@]}"; do
-        if [ "${id_array[$i]}" = "$menu_id" ]; then
-            echo "${title_array[$i]}"
-            return
-        fi
-    done
-}
-
 # 渲染菜单
 render_menu() {
     clear
@@ -228,9 +200,15 @@ render_menu() {
         echo -e "${Cyan}       VPSToolKit 主菜单${Reset}"
         echo -e "${Cyan}======================================${Reset}"
     else
-        local parent_title=$(get_parent_menu_title "$current_menu")
+        local menu_title=""
+        for i in "${!MENU_IDS[@]}"; do
+            if [ "${MENU_IDS[$i]}" = "$current_menu" ]; then
+                menu_title="${MENU_TITLES[$i]}"
+                break
+            fi
+        done
         echo -e "${Cyan}======================================${Reset}"
-        echo -e "${Cyan}   主菜单 ${Yellow}>${Reset} ${Green}${parent_title}${Reset}"
+        echo -e "${Cyan}       $menu_title${Reset}"
         echo -e "${Cyan}======================================${Reset}"
     fi
     
@@ -244,7 +222,7 @@ render_menu() {
             echo -e "   ${MENU_TITLES[$i]}"
         fi
     done
-   
+    
     # 显示退出/返回选项
     if [ $current_selection -eq ${#MENU_IDS[@]} ]; then
         if [ "$current_menu" = "main" ]; then
@@ -263,20 +241,6 @@ render_menu() {
     echo ""
     echo -e "${Cyan}======================================${Reset}"
     echo -e "使用 ${Green}↑/↓${Reset} 或 ${Green}j/k${Reset} 选择，${Green}Enter${Reset} 确认"
-    
-    # 如果是二级菜单且有选中项，显示脚本执行预览
-    if [ "$current_menu" != "main" ] && [ $current_selection -lt ${#MENU_IDS[@]} ]; then
-        local selected_id="${MENU_IDS[$current_selection]}"
-        local script_path="${MENU_SCRIPTS[$selected_id]}"
-        
-        if [ -n "$script_path" ]; then
-            local script_url=$(get_script_url "$script_path")
-            echo ""
-            echo -e "${Yellow}[执行预览]${Reset}"
-            echo -e "${Cyan}脚本地址：${Reset}${script_url}"
-            echo -e "${Cyan}执行命令：${Reset}bash <(curl -sL \"${script_url}\")"
-        fi
-    fi
 }
 
 # 处理选择
@@ -318,10 +282,13 @@ handle_selection() {
         
         clear
         echo -e "${Cyan}======================================${Reset}"
-        echo -e "${Green}[执行中]${Reset} ${MENU_TITLES[$selected_index]}"
+        echo -e "${Green}[执行]${Reset} ${MENU_TITLES[$selected_index]}"
         echo -e "${Cyan}======================================${Reset}"
+        echo -e "${Yellow}脚本地址：${Reset}${script_url}"
         echo ""
-        
+        echo -e "${Yellow}执行命令：${Reset}bash <(curl -sL \"${script_url}\")"
+        echo ""
+        sleep 1
         # 在线执行脚本
         bash <(curl -sL "${script_url}")
         
