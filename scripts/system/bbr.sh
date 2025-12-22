@@ -1309,7 +1309,7 @@ start_menu() {
     optimizing_ddcc
     ;;
   99)
-    exit 1
+    return
     ;;
   *)
     clear

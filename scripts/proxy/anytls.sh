@@ -67,9 +67,21 @@ check_new_ver(){
 
 get_current_ver(){
 	if [[ -e ${ANYTLS_FILE} ]]; then
-		CURRENT_VERSION=$(${ANYTLS_FILE} -v 2>&1 | grep -oP 'v\d+\.\d+\.\d+' | head -1)
+		# 尝试多种方式获取版本
+		CURRENT_VERSION=$(${ANYTLS_FILE} -v 2>&1 | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+		
+		# 如果第一种方式失败，尝试其他方式
 		if [[ -z ${CURRENT_VERSION} ]]; then
-			# 如果无法获取版本，尝试从文件名或其他方式获取
+			CURRENT_VERSION=$(${ANYTLS_FILE} --version 2>&1 | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+		fi
+		
+		# 如果还是获取不到，尝试检查二进制文件的字符串
+		if [[ -z ${CURRENT_VERSION} ]]; then
+			CURRENT_VERSION=$(strings ${ANYTLS_FILE} 2>/dev/null | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+		fi
+		
+		# 如果都失败了，标记为未知
+		if [[ -z ${CURRENT_VERSION} ]]; then
 			CURRENT_VERSION="未知"
 		fi
 	else
@@ -318,13 +330,27 @@ update(){
 	check_new_ver
 	get_current_ver
 	
+	echo -e "${Info} 当前已安装版本：[ ${Green_font_prefix}${CURRENT_VERSION}${Font_color_suffix} ]"
+	
 	# 检查版本是否相同
 	if [[ "${CURRENT_VERSION}" == "${LATEST_VERSION}" ]]; then
-		echo -e "${Info} 当前已安装版本 [ ${CURRENT_VERSION} ] 与最新版本相同，无需更新！"
+		echo -e "${Info} 当前版本与最新版本相同，无需更新！"
+		echo && echo -n " 按回车键返回主菜单..." && read
+		start_menu
 		return
 	fi
 	
-	echo -e "${Info} 当前版本：[ ${CURRENT_VERSION} ]，最新版本：[ ${LATEST_VERSION} ]"
+	# 如果当前版本未知，询问是否继续
+	if [[ "${CURRENT_VERSION}" == "未知" ]]; then
+		echo -e "${Tip} 无法确定当前版本，是否继续更新？[y/N]"
+		read -e -p "(默认：N)：" yn
+		[[ -z ${yn} ]] && yn="n"
+		if [[ ${yn} != [Yy] ]]; then
+			echo -e "${Info} 已取消更新"
+			return
+		fi
+	fi
+	
 	echo -e "${Info} 开始更新 AnyTLS..."
 	check_status
 	[[ "$status" == "running" ]] && stop
@@ -483,7 +509,7 @@ start_menu(){
 		view_log
 		;;
 		0)
-		exit 0
+		return
 		;;
 		*)
 		echo -e "${Error} 请输入正确的数字 [0-10]"

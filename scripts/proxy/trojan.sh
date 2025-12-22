@@ -991,7 +991,7 @@ start_menu(){
 		view_log
 		;;
 		0)
-		exit 0
+		return
 		;;
 		*)
 		echo -e "${Error} 请输入正确的数字 [0-10]"

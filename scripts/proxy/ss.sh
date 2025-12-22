@@ -535,57 +535,57 @@ start_menu(){
 ==================状态==================
  Shadowsocks Rust : [${status_show}]
 ========================================
- ${Green_font_prefix}0.${Font_color_suffix}  更新脚本
+ ${Green_font_prefix}1.${Font_color_suffix}  更新脚本
 ==================菜单==================
- ${Green_font_prefix}1.${Font_color_suffix}  安装 Shadowsocks Rust
- ${Green_font_prefix}2.${Font_color_suffix}  更新 Shadowsocks Rust
- ${Green_font_prefix}3.${Font_color_suffix}  卸载 Shadowsocks Rust
+ ${Green_font_prefix}2.${Font_color_suffix}  安装 Shadowsocks Rust
+ ${Green_font_prefix}3.${Font_color_suffix}  更新 Shadowsocks Rust
+ ${Green_font_prefix}4.${Font_color_suffix}  卸载 Shadowsocks Rust
 ————————————————————————————————————————
- ${Green_font_prefix}4.${Font_color_suffix}  启动 Shadowsocks Rust
- ${Green_font_prefix}5.${Font_color_suffix}  停止 Shadowsocks Rust
- ${Green_font_prefix}6.${Font_color_suffix}  重启 Shadowsocks Rust
+ ${Green_font_prefix}5.${Font_color_suffix}  启动 Shadowsocks Rust
+ ${Green_font_prefix}6.${Font_color_suffix}  停止 Shadowsocks Rust
+ ${Green_font_prefix}7.${Font_color_suffix}  重启 Shadowsocks Rust
 ————————————————————————————————————————
- ${Green_font_prefix}7.${Font_color_suffix}  修改 Shadowsocks Rust 配置
- ${Green_font_prefix}8.${Font_color_suffix}  查看 Shadowsocks Rust 配置
- ${Green_font_prefix}9.${Font_color_suffix}  查看 Shadowsocks Rust 状态
+ ${Green_font_prefix}8.${Font_color_suffix}  修改 Shadowsocks Rust 配置
+ ${Green_font_prefix}9.${Font_color_suffix}  查看 Shadowsocks Rust 配置
+ ${Green_font_prefix}10.${Font_color_suffix}  查看 Shadowsocks Rust 状态
 ————————————————————————————————————————
- ${Green_font_prefix}00.${Font_color_suffix} 退出脚本
+ ${Green_font_prefix}0.${Font_color_suffix} 退出脚本
 ========================================" && echo
 	
 	read -e -p " 请输入数字 [0-9]：" num
 	case "$num" in
-		0)
+		1)
 		update_sh
 		;;
-		1)
+		2)
 		install
 		;;
-		2)
+		3)
 		update
 		;;
-		3)
+		4)
 		uninstall
 		;;
-		4)
+		5)
 		start
 		;;
-		5)
+		6)
 		stop
 		;;
-		6)
+		7)
 		restart
 		;;
-		7)
+		8)
 		set_config
 		;;
-		8)
+		9)
 		view
 		;;
-		9)
+		10)
 		view_status
 		;;
-		00)
-		exit 0
+		0)
+		return
 		;;
 		*)
 		echo -e "${Error} 请输入正确的数字 [0-9]"
