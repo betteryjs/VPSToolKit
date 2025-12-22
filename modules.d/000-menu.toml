@@ -6,3 +6,8 @@ sub_menus = [
     "system_tools",
     "utility_tools",
 ]
+titles = [
+    "代理服务管理",
+    "系统工具",
+    "实用工具"
+]

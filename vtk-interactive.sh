@@ -177,116 +177,310 @@ show_help() {
     echo "Powered by betteryjs"
 }
 
-# 加载主菜单配置（模拟从 TOML 加载）
+# 解析 TOML 数组（简单实现）
+parse_toml_array() {
+    local file=$1
+    local key=$2
+    local in_array=0
+    local result=()
+    
+    while IFS= read -r line; do
+        # 检测数组开始
+        if [[ "$line" =~ ^[[:space:]]*"$key"[[:space:]]*=[[:space:]]*\[ ]]; then
+            in_array=1
+            # 检查是否在同一行结束
+            if [[ "$line" =~ \] ]]; then
+                # 单行数组
+                local content="${line#*[}"
+                content="${content%]*}"
+                content="${content//\"/}"
+                content="${content//,/ }"
+                for item in $content; do
+                    item=$(echo "$item" | xargs)
+                    [ -n "$item" ] && result+=("$item")
+                done
+                break
+            fi
+            continue
+        fi
+        
+        # 在数组中读取元素
+        if [ $in_array -eq 1 ]; then
+            # 检测数组结束
+            if [[ "$line" =~ \] ]]; then
+                # 处理最后一行（可能包含元素）
+                local content="${line%]*}"
+                content="${content//\"/}"
+                content="${content//,/}"
+                content=$(echo "$content" | xargs)
+                [ -n "$content" ] && result+=("$content")
+                break
+            fi
+            # 提取数组元素
+            local item=$(echo "$line" | sed 's/^[[:space:]]*"\(.*\)"[[:space:]]*,\?[[:space:]]*$/\1/')
+            [ -n "$item" ] && result+=("$item")
+        fi
+    done < "$file"
+    
+    # 输出结果
+    for item in "${result[@]}"; do
+        echo "$item"
+    done
+}
+
+# 解析 TOML 键值对（scripts 部分）
+parse_toml_key_value() {
+    local file=$1
+    local key=$2
+    local in_section=0
+    
+    while IFS= read -r line; do
+        # 检测 [scripts] 部分
+        if [[ "$line" =~ ^\[scripts\] ]]; then
+            in_section=1
+            continue
+        fi
+        
+        # 遇到新的 section 退出
+        if [[ "$line" =~ ^\[\[.*\]\] ]] && [ $in_section -eq 1 ]; then
+            break
+        fi
+        
+        # 在 scripts 部分查找键值对
+        if [ $in_section -eq 1 ]; then
+            if [[ "$line" =~ ^[[:space:]]*"$key"[[:space:]]*=[[:space:]]*"(.*)"[[:space:]]*$ ]]; then
+                echo "${BASH_REMATCH[1]}"
+                return
+            fi
+            if [[ "$line" =~ ^[[:space:]]*$key[[:space:]]*=[[:space:]]*"(.*)"[[:space:]]*$ ]]; then
+                echo "${BASH_REMATCH[1]}"
+                return
+            fi
+        fi
+    done < "$file"
+}
+
+# 通用子菜单加载函数
+load_submenu_from_toml() {
+    local menu_id=$1
+    local toml_file=$2
+    
+    MENU_IDS=()
+    MENU_TITLES=()
+    declare -gA MENU_ACTIONS
+    
+    if [ ! -f "$toml_file" ]; then
+        return 1
+    fi
+    
+    # 读取该菜单的 sub_menus 和相应的 title、script
+    local current_id=""
+    local in_menu=0
+    local in_target_menu=0
+    
+    while IFS= read -r line; do
+        # 检测 [[menus]] 开始
+        if [[ "$line" =~ ^\[\[menus\]\] ]]; then
+            in_menu=1
+            in_target_menu=0
+            current_id=""
+            continue
+        fi
+        
+        if [ $in_menu -eq 1 ]; then
+            # 读取 id
+            if [[ "$line" =~ ^[[:space:]]*id[[:space:]]*=[[:space:]]*"(.*)"[[:space:]]*$ ]]; then
+                current_id="${BASH_REMATCH[1]}"
+                if [ "$current_id" = "$menu_id" ]; then
+                    in_target_menu=1
+                fi
+            fi
+            
+            # 在目标菜单中读取 sub_menus
+            if [ $in_target_menu -eq 1 ] && [[ "$line" =~ ^[[:space:]]*sub_menus ]]; then
+                # 使用 parse_toml_array 读取数组
+                while IFS= read -r sub_id; do
+                    MENU_IDS+=("$sub_id")
+                done < <(parse_toml_array "$toml_file" "sub_menus")
+                break
+            fi
+        fi
+    done < "$toml_file"
+    
+    # 为每个 sub_menu 读取 title 和 script
+    for menu_item_id in "${MENU_IDS[@]}"; do
+        local title=""
+        local script_key=""
+        local in_menu=0
+        
+        while IFS= read -r line; do
+            # 检测 [[menus]]
+            if [[ "$line" =~ ^\[\[menus\]\] ]]; then
+                in_menu=1
+                current_id=""
+                continue
+            fi
+            
+            if [ $in_menu -eq 1 ]; then
+                # 读取 id
+                if [[ "$line" =~ ^[[:space:]]*id[[:space:]]*=[[:space:]]*"(.*)"[[:space:]]*$ ]]; then
+                    current_id="${BASH_REMATCH[1]}"
+                fi
+                
+                # 匹配目标菜单项
+                if [ "$current_id" = "$menu_item_id" ]; then
+                    # 读取 title
+                    if [[ "$line" =~ ^[[:space:]]*title[[:space:]]*=[[:space:]]*"(.*)"[[:space:]]*$ ]]; then
+                        title="${BASH_REMATCH[1]}"
+                    fi
+                    
+                    # 读取 script
+                    if [[ "$line" =~ ^[[:space:]]*script[[:space:]]*=[[:space:]]*"(.*)"[[:space:]]*$ ]]; then
+                        script_key="${BASH_REMATCH[1]}"
+                    fi
+                    
+                    # 如果都读取到了，退出
+                    if [ -n "$title" ] && [ -n "$script_key" ]; then
+                        break
+                    fi
+                fi
+            fi
+        done < "$toml_file"
+        
+        # 添加 title
+        MENU_TITLES+=("$title")
+        
+        # 通过 script_key 查找实际脚本路径
+        local script_path=$(parse_toml_key_value "$toml_file" "$script_key")
+        MENU_ACTIONS["$menu_item_id"]="$script_path"
+    done
+}
+
+# 加载主菜单配置（从 TOML 加载）
 load_main_menu() {
     MENU_IDS=()
     MENU_TITLES=()
     declare -gA MENU_CHILDREN
     declare -gA MENU_ACTIONS
     
-    MENU_IDS+=("proxy_services")
-    MENU_TITLES+=("代理服务管理")
-    MENU_CHILDREN["proxy_services"]="1"
+    local menu_config="${MODULES_DIR}/000-menu.toml"
     
-    MENU_IDS+=("system_tools")
-    MENU_TITLES+=("系统工具")
-    MENU_CHILDREN["system_tools"]="1"
-    
-    MENU_IDS+=("utility_tools")
-    MENU_TITLES+=("实用工具")
-    MENU_CHILDREN["utility_tools"]="1"
+    if [ -f "$menu_config" ]; then
+        # 读取 sub_menus
+        while IFS= read -r menu_id; do
+            MENU_IDS+=("$menu_id")
+            MENU_CHILDREN["$menu_id"]="1"
+        done < <(parse_toml_array "$menu_config" "sub_menus")
+        
+        # 读取 titles
+        while IFS= read -r title; do
+            MENU_TITLES+=("$title")
+        done < <(parse_toml_array "$menu_config" "titles")
+    else
+        # 配置文件不存在，使用默认值
+        MENU_IDS+=("proxy_services")
+        MENU_TITLES+=("代理服务管理")
+        MENU_CHILDREN["proxy_services"]="1"
+        
+        MENU_IDS+=("system_tools")
+        MENU_TITLES+=("系统工具")
+        MENU_CHILDREN["system_tools"]="1"
+        
+        MENU_IDS+=("utility_tools")
+        MENU_TITLES+=("实用工具")
+        MENU_CHILDREN["utility_tools"]="1"
+    fi
 }
 
-# 加载代理服务菜单
-load_proxy_menu() {
-    MENU_IDS=()
-    MENU_TITLES=()
-    declare -gA MENU_ACTIONS
+# 查找包含指定 menu_id 的 TOML 文件
+find_toml_for_menu() {
+    local menu_id=$1
+    local modules_dir="${MODULES_DIR}"
     
-    MENU_IDS+=("proxy_anytls")
-    MENU_TITLES+=("AnyTLS 管理")
-    MENU_ACTIONS["proxy_anytls"]="scripts/proxy/anytls.sh"
+    # 遍历所有 TOML 文件
+    for toml_file in "${modules_dir}"/*.toml; do
+        [ -f "$toml_file" ] || continue
+        
+        # 检查文件中是否包含该 menu_id
+        while IFS= read -r line; do
+            if [[ "$line" =~ ^[[:space:]]*id[[:space:]]*=[[:space:]]*"$menu_id"[[:space:]]*$ ]]; then
+                echo "$toml_file"
+                return 0
+            fi
+        done < "$toml_file"
+    done
     
-    MENU_IDS+=("proxy_ss")
-    MENU_TITLES+=("Shadowsocks 管理")
-    MENU_ACTIONS["proxy_ss"]="scripts/proxy/ss.sh"
-    
-    MENU_IDS+=("proxy_trojan")
-    MENU_TITLES+=("Trojan-Go 管理")
-    MENU_ACTIONS["proxy_trojan"]="scripts/proxy/trojan.sh"
-    
-    MENU_IDS+=("proxy_snell4")
-    MENU_TITLES+=("Snell v4 管理")
-    MENU_ACTIONS["proxy_snell4"]="scripts/proxy/snell4.sh"
-    
-    MENU_IDS+=("proxy_snell5")
-    MENU_TITLES+=("Snell v5 管理")
-    MENU_ACTIONS["proxy_snell5"]="scripts/proxy/snell5.sh"
+    return 1
 }
 
-# 加载系统工具菜单
-load_system_menu() {
-    MENU_IDS=()
-    MENU_TITLES=()
-    declare -gA MENU_ACTIONS
-    
-    MENU_IDS+=("system_bbr")
-    MENU_TITLES+=("BBR 加速管理")
-    MENU_ACTIONS["system_bbr"]="scripts/system/bbr.sh"
-    
-    MENU_IDS+=("system_dd")
-    MENU_TITLES+=("DD 重装系统")
-    MENU_ACTIONS["system_dd"]="scripts/system/dd.sh"
-}
-
-# 加载实用工具菜单
-load_utility_menu() {
-    MENU_IDS=()
-    MENU_TITLES=()
-    declare -gA MENU_ACTIONS
-    
-    MENU_IDS+=("tools_speedtest")
-    MENU_TITLES+=("Speedtest 网络测速")
-    MENU_ACTIONS["tools_speedtest"]="scripts/tools/speedtest.sh"
-}
-
-# 加载菜单
+# 加载菜单（通用实现）
 load_menu() {
     local menu_id=$1
-    case "$menu_id" in
-        "main")
-            load_main_menu
-            ;;
-        "proxy_services")
-            load_proxy_menu
-            ;;
-        "system_tools")
-            load_system_menu
-            ;;
-        "utility_tools")
-            load_utility_menu
-            ;;
-    esac
+    
+    # 主菜单特殊处理
+    if [ "$menu_id" = "main" ]; then
+        load_main_menu
+        return
+    fi
+    
+    # 自动查找对应的 TOML 文件并加载
+    local toml_file=$(find_toml_for_menu "$menu_id")
+    if [ -n "$toml_file" ]; then
+        load_submenu_from_toml "$menu_id" "$toml_file"
+    else
+        echo "Error: Cannot find TOML configuration for menu: $menu_id" >&2
+        return 1
+    fi
+}
+
+# 获取菜单标题
+get_menu_title() {
+    local menu_id=$1
+    
+    # 主菜单
+    if [ "$menu_id" = "main" ]; then
+        echo "主菜单"
+        return
+    fi
+    
+    # 从 TOML 文件中查找标题
+    local toml_file=$(find_toml_for_menu "$menu_id")
+    if [ -n "$toml_file" ]; then
+        local in_menu=0
+        local current_id=""
+        
+        while IFS= read -r line; do
+            if [[ "$line" =~ ^\[\[menus\]\] ]]; then
+                in_menu=1
+                current_id=""
+                continue
+            fi
+            
+            if [ $in_menu -eq 1 ]; then
+                if [[ "$line" =~ ^[[:space:]]*id[[:space:]]*=[[:space:]]*"(.*)"[[:space:]]*$ ]]; then
+                    current_id="${BASH_REMATCH[1]}"
+                fi
+                
+                if [ "$current_id" = "$menu_id" ]; then
+                    if [[ "$line" =~ ^[[:space:]]*title[[:space:]]*=[[:space:]]*"(.*)"[[:space:]]*$ ]]; then
+                        echo "${BASH_REMATCH[1]}"
+                        return
+                    fi
+                fi
+            fi
+        done < "$toml_file"
+    fi
+    
+    # 默认返回 ID
+    echo "$menu_id"
 }
 
 # 渲染菜单
 render_menu() {
     show_header
     
-    case "$current_menu" in
-        "main")
-            show_menu_title "主菜单"
-            ;;
-        "proxy_services")
-            show_menu_title "代理服务管理"
-            ;;
-        "system_tools")
-            show_menu_title "系统工具"
-            ;;
-        "utility_tools")
-            show_menu_title "实用工具"
-            ;;
-    esac
+    local menu_title=$(get_menu_title "$current_menu")
+    show_menu_title "$menu_title"
     
     local i=0
     for menu_id in "${MENU_IDS[@]}"; do
