@@ -17,13 +17,13 @@ VPSToolKit 是一个面向 VPS 服务器管理的开源脚本工具集，提供�
 **方式一：OSS CDN（国内推荐）**
 
 ```bash
-bash <(curl -sL https://oss.naloong.de/sh/install.sh)
+bash <(curl -sL https://oss.naloong.de/sh/vps/install.sh)
 ```
 
 或使用 wget：
 
 ```bash
-bash <(wget -qO- https://oss.naloong.de/sh/install.sh)
+bash <(wget -qO- https://oss.naloong.de/sh/vps/install.sh)
 ```
 
 **方式二：GitHub Raw（国外推荐）**

@@ -71,7 +71,7 @@ ${Green_font_prefix}2.${Font_color_suffix} OSS CDN (国内推荐)
 			echo -e "${Info} 已选择 GitHub Raw 下载源"
 			;;
 		2)
-			GITHUB_RAW="https://oss.naloong.de/sh"
+			GITHUB_RAW="https://oss.naloong.de/sh/vps"
 			DOWNLOAD_SOURCE="oss"
 			echo -e "${Info} 已选择 OSS CDN 下载源"
 			;;
