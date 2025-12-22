@@ -182,86 +182,49 @@ show_help() {
 parse_toml_array() {
     local file=$1
     local key=$2
-    local in_array=0
-    local result=()
     
-    while IFS= read -r line; do
-        # 检测数组开始
-        if [[ "$line" =~ ^[[:space:]]*"$key"[[:space:]]*=[[:space:]]*\[ ]]; then
-            in_array=1
-            # 检查是否在同一行结束
-            if [[ "$line" =~ \] ]]; then
-                # 单行数组
-                local content="${line#*[}"
-                content="${content%]*}"
-                content="${content//\"/}"
-                content="${content//,/ }"
-                for item in $content; do
-                    item=$(echo "$item" | xargs)
-                    [ -n "$item" ] && result+=("$item")
-                done
-                break
-            fi
-            continue
-        fi
-        
-        # 在数组中读取元素
-        if [ $in_array -eq 1 ]; then
-            # 检测数组结束
-            if [[ "$line" =~ \] ]]; then
-                # 处理最后一行（可能包含元素）
-                local content="${line%]*}"
-                content="${content//\"/}"
-                content="${content//,/}"
-                content=$(echo "$content" | xargs)
-                [ -n "$content" ] && result+=("$content")
-                break
-            fi
-            # 提取数组元素
-            local item=$(echo "$line" | sed 's/^[[:space:]]*"\(.*\)"[[:space:]]*,\?[[:space:]]*$/\1/')
-            [ -n "$item" ] && result+=("$item")
-        fi
-    done < "$file"
-    
-    # 输出结果
-    for item in "${result[@]}"; do
-        echo "$item"
-    done
+    awk -v key="$key" '
+    BEGIN { in_array=0 }
+    $0 ~ "^[[:space:]]*" key "[[:space:]]*=[[:space:]]*\\[" {
+        in_array=1
+        if ($0 ~ /\]/) {
+            # 单行数组
+            match($0, /\[([^\]]*)\]/, arr)
+            content = arr[1]
+            gsub(/"/, "", content)
+            gsub(/,/, "\n", content)
+            gsub(/^[[:space:]]+|[[:space:]]+$/, "", content)
+            print content
+            exit
+        }
+        next
+    }
+    in_array {
+        if ($0 ~ /\]/) { exit }
+        gsub(/^[[:space:]]*"|"[[:space:]]*,?[[:space:]]*$/, "")
+        if ($0 != "") print $0
+    }
+    ' "$file"
 }
 
 # 解析 TOML 键值对（scripts 部分）
 parse_toml_key_value() {
     local file=$1
     local key=$2
-    local in_section=0
     
-    while IFS= read -r line; do
-        # 检测 [scripts] 部分
-        if [[ "$line" =~ ^\[scripts\] ]]; then
-            in_section=1
-            continue
-        fi
-        
-        # 遇到新的 section 退出
-        if [[ "$line" =~ ^\[\[.*\]\] ]] && [ $in_section -eq 1 ]; then
-            break
-        fi
-        
-        # 在 scripts 部分查找键值对
-        if [ $in_section -eq 1 ]; then
-            if [[ "$line" =~ ^[[:space:]]*"$key"[[:space:]]*=[[:space:]]*"(.*)"[[:space:]]*$ ]]; then
-                echo "${BASH_REMATCH[1]}"
-                return
-            fi
-            if [[ "$line" =~ ^[[:space:]]*$key[[:space:]]*=[[:space:]]*"(.*)"[[:space:]]*$ ]]; then
-                echo "${BASH_REMATCH[1]}"
-                return
-            fi
-        fi
-    done < "$file"
+    awk -v key="$key" '
+    BEGIN { in_scripts=0 }
+    /^\[scripts\]/ { in_scripts=1; next }
+    /^\[\[/ { in_scripts=0 }
+    in_scripts && $0 ~ "^[[:space:]]*" key "[[:space:]]*=" {
+        match($0, /"([^"]*)"/, arr)
+        print arr[1]
+        exit
+    }
+    ' "$file"
 }
 
-# 加载主菜单配置（从 menu.toml 加载）
+# 加载主菜单（从 menu.toml）
 load_main_menu() {
     MENU_IDS=()
     MENU_TITLES=()
@@ -271,23 +234,35 @@ load_main_menu() {
     local menu_file="${MODULES_DIR}/menu.toml"
     
     if [ ! -f "$menu_file" ]; then
-        echo "Error: Main menu file not found: $menu_file" >&2
+        echo "Error: Menu file not found: $menu_file" >&2
         return 1
     fi
     
-    # 读取 sub_menus 和 titles 数组
-    local menu_ids=($(parse_toml_array "$menu_file" "sub_menus"))
-    local menu_titles=($(parse_toml_array "$menu_file" "titles"))
+    # 读取主菜单项
+    local ids=$(parse_toml_array "$menu_file" "sub_menus")
+    local titles=$(parse_toml_array "$menu_file" "titles")
     
-    # 填充数组
-    for i in "${!menu_ids[@]}"; do
-        MENU_IDS+=("${menu_ids[$i]}")
-        MENU_TITLES+=("${menu_titles[$i]}")
-        MENU_CHILDREN["${menu_ids[$i]}"]="1"
+    # 将结果转为数组
+    local id_array=()
+    local title_array=()
+    
+    while IFS= read -r line; do
+        [ -n "$line" ] && id_array+=("$line")
+    done <<< "$ids"
+    
+    while IFS= read -r line; do
+        [ -n "$line" ] && title_array+=("$line")
+    done <<< "$titles"
+    
+    # 填充全局数组
+    for i in "${!id_array[@]}"; do
+        MENU_IDS+=("${id_array[$i]}")
+        MENU_TITLES+=("${title_array[$i]}")
+        MENU_CHILDREN["${id_array[$i]}"]="1"
     done
 }
 
-# 加载二级菜单（从 proxy.toml, system.toml, tools.toml 等文件加载）
+# 加载二级菜单（从 proxy.toml, system.toml, tools.toml）
 load_submenu() {
     local menu_id=$1
     
@@ -296,53 +271,66 @@ load_submenu() {
     MENU_CHILDREN=()
     MENU_ACTIONS=()
     
-    # 查找包含该菜单的 TOML 文件（排除 menu.toml）
-    local toml_file=""
+    # 查找包含该菜单的文件
+    local menu_file=""
     for file in "${MODULES_DIR}"/*.toml; do
         [ -f "$file" ] || continue
+        [ "$(basename "$file")" = "menu.toml" ] && continue
         
-        # 跳过主菜单文件
-        local basename=$(basename "$file")
-        [[ "$basename" == "menu.toml" ]] && continue
-        
-        # 检查是否包含目标菜单
-        if grep -q "^[[:space:]]*id[[:space:]]*=[[:space:]]*\"$menu_id\"" "$file"; then
-            toml_file="$file"
+        if grep -q "id = \"$menu_id\"" "$file"; then
+            menu_file="$file"
             break
         fi
     done
     
-    if [ -z "$toml_file" ]; then
-        echo "Error: Menu '$menu_id' not found in any TOML file" >&2
+    if [ -z "$menu_file" ]; then
         return 1
     fi
     
-    # 读取 sub_menus 数组
-    local sub_ids=($(parse_toml_array "$toml_file" "sub_menus"))
+    # 读取子菜单项
+    local item_ids=$(parse_toml_array "$menu_file" "sub_menus")
     
-    # 为每个子菜单项读取信息
-    for item_id in "${sub_ids[@]}"; do
+    # 为每个项读取详细信息
+    while IFS= read -r item_id; do
+        [ -z "$item_id" ] && continue
+        
         MENU_IDS+=("$item_id")
         
-        # 读取 title
-        local title=$(grep -A 10 "^[[:space:]]*id[[:space:]]*=[[:space:]]*\"$item_id\"" "$toml_file" | \
-                     grep -m 1 "^[[:space:]]*title[[:space:]]*=" | \
-                     sed 's/^[[:space:]]*title[[:space:]]*=[[:space:]]*"\(.*\)"[[:space:]]*$/\1/')
+        # 提取 title
+        local title=$(awk -v id="$item_id" '
+            /^\[\[menus\]\]/ { in_menu=1; next }
+            in_menu && /^id = / {
+                if ($0 ~ id) { found=1 }
+                else { found=0; in_menu=0 }
+            }
+            found && /^title = / {
+                match($0, /"([^"]*)"/, arr)
+                print arr[1]
+                exit
+            }
+        ' "$menu_file")
+        
         MENU_TITLES+=("$title")
         
-        # 读取 script key
-        local script_key=$(grep -A 10 "^[[:space:]]*id[[:space:]]*=[[:space:]]*\"$item_id\"" "$toml_file" | \
-                          grep -m 1 "^[[:space:]]*script[[:space:]]*=" | \
-                          sed 's/^[[:space:]]*script[[:space:]]*=[[:space:]]*"\(.*\)"[[:space:]]*$/\1/')
+        # 提取 script key 并查找路径
+        local script_key=$(awk -v id="$item_id" '
+            /^\[\[menus\]\]/ { in_menu=1; next }
+            in_menu && /^id = / {
+                if ($0 ~ id) { found=1 }
+                else { found=0; in_menu=0 }
+            }
+            found && /^script = / {
+                match($0, /"([^"]*)"/, arr)
+                print arr[1]
+                exit
+            }
+        ' "$menu_file")
         
-        # 通过 script key 查找实际路径
         if [ -n "$script_key" ]; then
-            local script_path=$(parse_toml_key_value "$toml_file" "$script_key")
+            local script_path=$(parse_toml_key_value "$menu_file" "$script_key")
             MENU_ACTIONS["$item_id"]="$script_path"
         fi
-    done
-    
-    return 0
+    done <<< "$item_ids"
 }
 
 # 加载菜单（统一入口）
@@ -360,45 +348,35 @@ load_menu() {
 get_menu_title() {
     local menu_id=$1
     
-    # 主菜单
     if [ "$menu_id" = "main" ]; then
         echo "主菜单"
         return
     fi
     
-    # 从 TOML 文件中查找标题（排除 menu.toml）
-    for toml_file in "${MODULES_DIR}"/*.toml; do
-        [ -f "$toml_file" ] || continue
+    # 从配置文件查找标题
+    for file in "${MODULES_DIR}"/*.toml; do
+        [ -f "$file" ] || continue
+        [ "$(basename "$file")" = "menu.toml" ] && continue
         
-        local basename=$(basename "$toml_file")
-        [[ "$basename" == "menu.toml" ]] && continue
+        local title=$(awk -v id="$menu_id" '
+            /^\[\[menus\]\]/ { in_menu=1; next }
+            in_menu && /^id = / {
+                if ($0 ~ id) { found=1 }
+                else { found=0; in_menu=0 }
+            }
+            found && /^title = / {
+                match($0, /"([^"]*)"/, arr)
+                print arr[1]
+                exit
+            }
+        ' "$file")
         
-        local in_menu=0
-        local current_id=""
-        
-        while IFS= read -r line; do
-            if [[ "$line" =~ ^\[\[menus\]\] ]]; then
-                in_menu=1
-                current_id=""
-                continue
-            fi
-            
-            if [ $in_menu -eq 1 ]; then
-                if [[ "$line" =~ ^[[:space:]]*id[[:space:]]*=[[:space:]]*\"(.*)\" ]]; then
-                    current_id="${BASH_REMATCH[1]}"
-                fi
-                
-                if [ "$current_id" = "$menu_id" ]; then
-                    if [[ "$line" =~ ^[[:space:]]*title[[:space:]]*=[[:space:]]*\"(.*)\" ]]; then
-                        echo "${BASH_REMATCH[1]}"
-                        return
-                    fi
-                fi
-            fi
-        done < "$toml_file"
+        if [ -n "$title" ]; then
+            echo "$title"
+            return
+        fi
     done
     
-    # 默认返回 ID
     echo "$menu_id"
 }
 
