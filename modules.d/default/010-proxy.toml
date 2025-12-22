@@ -1,0 +1,54 @@
+[scripts]
+# 代理服务管理脚本
+
+# AnyTLS
+proxy_anytls = "bash /usr/local/vpstoolkit/scripts/proxy/anytls.sh"
+
+# Shadowsocks
+proxy_ss = "bash /usr/local/vpstoolkit/scripts/proxy/ss.sh"
+
+# Trojan-Go
+proxy_trojan = "bash /usr/local/vpstoolkit/scripts/proxy/trojan.sh"
+
+# Snell v4
+proxy_snell4 = "bash /usr/local/vpstoolkit/scripts/proxy/snell4.sh"
+
+# Snell v5
+proxy_snell5 = "bash /usr/local/vpstoolkit/scripts/proxy/snell5.sh"
+
+
+[[menus]]
+id = "proxy_services"
+title = "代理服务管理"
+sub_menus = [
+    "proxy_anytls",
+    "proxy_ss",
+    "proxy_trojan",
+    "proxy_snell4",
+    "proxy_snell5",
+]
+
+[[menus]]
+id = "proxy_anytls"
+title = "AnyTLS 管理"
+script = "proxy_anytls"
+
+[[menus]]
+id = "proxy_ss"
+title = "Shadowsocks 管理"
+script = "proxy_ss"
+
+[[menus]]
+id = "proxy_trojan"
+title = "Trojan-Go 管理"
+script = "proxy_trojan"
+
+[[menus]]
+id = "proxy_snell4"
+title = "Snell v4 管理"
+script = "proxy_snell4"
+
+[[menus]]
+id = "proxy_snell5"
+title = "Snell v5 管理"
+script = "proxy_snell5"

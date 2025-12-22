@@ -1,0 +1,8 @@
+[[menus]]
+id = "main"
+title = "VPSToolKit 主菜单"
+sub_menus = [
+    "proxy_services",
+    "system_tools",
+    "utility_tools",
+]

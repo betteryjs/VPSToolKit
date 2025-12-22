@@ -4,11 +4,12 @@ export PATH
 
 #=================================================
 #	System Required: CentOS/Debian/Ubuntu
-#	Description: 统一管理脚本
+#	Description: 统一管理脚本（兼容旧版本）
 #	功能：整合所有服务管理脚本
+#	注意：本脚本保留用于向后兼容，建议使用新的 vtk 命令
 #=================================================
 
-sh_ver="1.0.0"
+sh_ver="2.0.0"
 
 Green_font_prefix="\033[32m"
 Red_font_prefix="\033[31m"
@@ -19,7 +20,11 @@ Error="${Red_font_prefix}[错误]${Font_color_suffix}"
 Tip="${Yellow_font_prefix}[注意]${Font_color_suffix}"
 
 # 脚本所在目录
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="/usr/local/vpstoolkit/scripts"
+# 兼容安装路径
+if [[ ! -d "${SCRIPT_DIR}" ]]; then
+	SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/scripts"
+fi
 
 check_root(){
 	if [[ $EUID != 0 ]]; then
@@ -41,10 +46,22 @@ check_script_exists(){
 download_script(){
 	local script_name=$1
 	local script_path="${SCRIPT_DIR}/${script_name}"
-	local download_url="https://raw.githubusercontent.com/betteryjs/VPSToolKit/master/scripts/${script_name}"
+	local download_url=""
+	
+	# 根据环境变量或默认值选择下载源
+	local download_source="${VTK_DOWNLOAD_SOURCE:-github}"
+	
+	if [[ "${download_source}" == "oss" ]]; then
+		download_url="https://oss.naloong.de/VPSToolKit/scripts/${script_name}"
+	else
+		download_url="https://raw.githubusercontent.com/betteryjs/VPSToolKit/master/scripts/${script_name}"
+	fi
 	
 	echo -e "${Info} 脚本 ${script_name} 不存在，正在从远程下载..."
 	echo -e "${Info} 下载地址：${download_url}"
+	
+	# 确保目录存在
+	mkdir -p "$(dirname "${script_path}")"
 	
 	wget --no-check-certificate -O "${script_path}" "${download_url}"
 	
@@ -108,57 +125,35 @@ run_script(){
 }
 
 manage_anytls(){
-	run_script "anytls.sh"
+	run_script "proxy/anytls.sh"
 }
 
 manage_ss(){
-	run_script "ss.sh"
+	run_script "proxy/ss.sh"
 }
 
 manage_bbr(){
-	run_script "bbr.sh"
+	run_script "system/bbr.sh"
 }
 
 manage_dd(){
-	run_script "dd.sh"
+	run_script "system/dd.sh"
 }
 
 manage_trojan(){
-	run_script "trojan.sh"
+	run_script "proxy/trojan.sh"
 }
 
 manage_speedtest(){
-	run_script "speedtest.sh"
+	run_script "tools/speedtest.sh"
 }
 
 manage_snell4(){
-	run_script "snell4.sh"
+	run_script "proxy/snell4.sh"
 }
 
 manage_snell5(){
-	run_script "snell5.sh"
-}
-
-update_script(){
-	echo -e "${Info} 开始更新管理脚本..."
-	cd "${SCRIPT_DIR}"
-	
-	# 检查是否为 git 仓库
-	if [[ -d .git ]]; then
-		echo -e "${Info} 检测到 Git 仓库，正在执行 git pull..."
-		git pull
-		if [[ $? -eq 0 ]]; then
-			echo -e "${Info} 脚本更新完成！"
-		else
-			echo -e "${Error} Git 更新失败！"
-		fi
-	else
-		echo -e "${Tip} 当前目录不是 Git 仓库"
-		echo -e "${Info} 请手动更新脚本或使用 git clone 获取最新版本"
-	fi
-	
-	echo && echo -n " 按回车键返回主菜单..." && read
-	start_menu
+	run_script "proxy/snell5.sh"
 }
 
 start_menu(){
@@ -166,22 +161,20 @@ start_menu(){
 	echo -e "
 ========================================
     VPS 服务统一管理脚本 ${Red_font_prefix}[v${sh_ver}]${Font_color_suffix}
+    ${Yellow_font_prefix}兼容模式 - 建议使用 vtk 命令${Font_color_suffix}
 ========================================
 
 ${Yellow_font_prefix}代理服务管理${Font_color_suffix}
-├── ${Green_font_prefix}1.${Font_color_suffix} AnyTLS 管理 (anytls.sh)
-├── ${Green_font_prefix}2.${Font_color_suffix} Shadowsocks 管理 (ss.sh)
-├── ${Green_font_prefix}3.${Font_color_suffix} Trojan-Go 管理 (trojan.sh)
-├── ${Green_font_prefix}4.${Font_color_suffix} Snell v4 管理 (snell4.sh)
-└── ${Green_font_prefix}5.${Font_color_suffix} Snell v5 管理 (snell5.sh)
+├── ${Green_font_prefix}1.${Font_color_suffix} AnyTLS 管理
+├── ${Green_font_prefix}2.${Font_color_suffix} Shadowsocks 管理
+├── ${Green_font_prefix}3.${Font_color_suffix} Trojan-Go 管理
+├── ${Green_font_prefix}4.${Font_color_suffix} Snell v4 管理
+└── ${Green_font_prefix}5.${Font_color_suffix} Snell v5 管理
 
 ${Yellow_font_prefix}系统工具${Font_color_suffix}
-├── ${Green_font_prefix}6.${Font_color_suffix} BBR 加速管理 (bbr.sh)
-├── ${Green_font_prefix}7.${Font_color_suffix} DD 重装系统 (dd.sh)
-└── ${Green_font_prefix}8.${Font_color_suffix} Speedtest 管理 (speedtest.sh)
-
-${Yellow_font_prefix}脚本管理${Font_color_suffix}
-├── ${Green_font_prefix}9.${Font_color_suffix} 更新所有脚本
+├── ${Green_font_prefix}6.${Font_color_suffix} BBR 加速管理
+├── ${Green_font_prefix}7.${Font_color_suffix} DD 重装系统
+├── ${Green_font_prefix}8.${Font_color_suffix} Speedtest 管理
 └── ${Green_font_prefix}0.${Font_color_suffix} 退出脚本
 
 ========================================
@@ -189,7 +182,7 @@ ${Yellow_font_prefix}脚本管理${Font_color_suffix}
 ========================================
 " && echo
 	
-	read -e -p " 请输入数字 [0-9]：" num
+	read -e -p " 请输入数字 [0-8]：" num
 	case "$num" in
 		1)
 			manage_anytls
@@ -215,17 +208,17 @@ ${Yellow_font_prefix}脚本管理${Font_color_suffix}
 		8)
 			manage_speedtest
 			;;
-		9)
-			update_script
-			;;
 		0)
 			echo -e "${Info} 退出脚本"
 			exit 0
 			;;
 		*)
-			echo -e "${Error} 请输入正确的数字 [0-9]"
+			echo -e "${Error} 请输入正确的数字 [0-8]"
 			sleep 2s
 			start_menu
+			;;
+	esac
+}
 			;;
 	esac
 }

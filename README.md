@@ -2,13 +2,17 @@
 
 VPSToolKit 是一个面向 VPS 服务器管理的开源脚本工具集，提供代理服务管理、系统优化和实用工具的一键式脚本解决方案。
 
+采用模块化架构设计，灵感来自 [NodeScriptKit](https://github.com/NodeSeekDev/NodeScriptKit)，使用 TOML 配置文件管理菜单和脚本，支持灵活扩展和远程订阅。
+
 ## ✨ 特性
 
 - 🚀 **代理服务管理**：支持 Shadowsocks、Trojan-Go、Snell、AnyTLS 等主流代理
 - ⚡ **系统优化**：BBR 加速、系统重装等系统级优化工具
 - 🛠️ **实用工具**：Speedtest 网络测速、磁盘测试等常用工具
-- 📦 **模块化设计**：脚本自动下载，用完即删，保持系统整洁
+- 📦 **模块化设计**：基于 TOML 配置，脚本按需下载，用完即删
 - 🎨 **友好界面**：树形菜单结构，操作直观便捷
+- 🔧 **灵活扩展**：支持本地扩展和远程订阅配置
+- 🔄 **向后兼容**：保留旧版 `m` 命令，平滑升级
 
 ## 🚀 快速开始
 
@@ -17,13 +21,13 @@ VPSToolKit 是一个面向 VPS 服务器管理的开源脚本工具集，提供�
 **方式一：OSS CDN（国内推荐）**
 
 ```bash
-bash <(curl -sL https://oss.naloong.de/sh/vps/install.sh)
+bash <(curl -sL https://oss.naloong.de/VPSToolKit/install.sh)
 ```
 
 或使用 wget：
 
 ```bash
-bash <(wget -qO- https://oss.naloong.de/sh/vps/install.sh)
+bash <(wget -qO- https://oss.naloong.de/VPSToolKit/install.sh)
 ```
 
 **方式二：GitHub Raw（国外推荐）**
@@ -51,7 +55,7 @@ m
 或者使用完整路径：
 
 ```bash
-bash /usr/local/bin/m
+bash /usr/local/bin/m.sh
 ```
 
 ## 📋 功能列表
@@ -73,11 +77,22 @@ bash /usr/local/bin/m
 
 ```
 VPSToolKit/
-├── README.md              # 项目说明文档
-├── LICENSE                # 许可证文件
-├── install.sh             # 一键安装脚本
-├── m.sh                  # 主菜单脚本
-└── scripts/              # 脚本目录
+├── README.md                # 项目说明文档
+├── LICENSE                  # 许可证文件
+├── DEVELOPMENT.md           # 开发指南
+├── CONTRIBUTING.md          # 贡献指南
+├── config.toml             # 主配置文件
+├── vtk.sh                  # 新版主入口脚本（需要 vtkCore）
+├── m.sh                    # 兼容旧版入口脚本
+├── install.sh              # 一键安装脚本
+├── modules.d/              # 模块配置目录
+│   ├── default/           # 官方默认模块
+│   │   ├── 000-menu.toml  # 主菜单配置
+│   │   ├── 010-proxy.toml # 代理服务模块
+│   │   ├── 020-system.toml# 系统工具模块
+│   │   └── 030-tools.toml # 实用工具模块
+│   └── extend/            # 用户自定义模块
+└── scripts/               # 脚本目录
     ├── proxy/            # 代理服务脚本
     │   ├── anytls.sh
     │   ├── ss.sh
@@ -89,6 +104,89 @@ VPSToolKit/
     │   └── dd.sh
     └── tools/            # 实用工具脚本
         └── speedtest.sh
+```
+
+## 🎯 配置系统
+
+VPSToolKit 采用 TOML 配置文件系统，支持模块化管理和灵活扩展。
+
+### 主配置文件
+
+位置：`/etc/vpstoolkit/config.toml`
+
+```toml
+[app]
+title = "VPSToolKit - VPS 服务统一管理脚本"
+entry = 'main'
+
+[local]
+include = [
+    '/etc/vpstoolkit/modules.d/default/*.toml',
+    '/etc/vpstoolkit/modules.d/extend/*.toml',
+]
+
+[remote]
+subscribes = []
+```
+
+### 模块配置文件
+
+模块配置文件包含脚本定义和菜单结构：
+
+```toml
+[scripts]
+proxy_ss = "bash /usr/local/vpstoolkit/scripts/proxy/ss.sh"
+
+[[menus]]
+id = "proxy_services"
+title = "代理服务管理"
+sub_menus = ["proxy_ss"]
+
+[[menus]]
+id = "proxy_ss"
+title = "Shadowsocks 管理"
+script = "proxy_ss"
+```
+
+### 扩展配置
+
+你可以在 `/etc/vpstoolkit/modules.d/extend/` 目录下创建自定义配置：
+
+```bash
+# 创建自定义配置
+vim /etc/vpstoolkit/modules.d/extend/100-custom.toml
+```
+
+```toml
+[scripts]
+custom_script = "bash /path/to/custom.sh"
+
+[[menus]]
+id = "main"
+title = "VPSToolKit 主菜单"
+sub_menus = [
+    "custom_menu",
+]
+
+[[menus]]
+id = "custom_menu"
+title = "自定义功能"
+script = "custom_script"
+```
+
+### 远程订阅
+
+支持订阅远程配置文件，编辑主配置：
+
+```bash
+vim /etc/vpstoolkit/config.toml
+```
+
+```toml
+[remote]
+subscribes = [
+    "https://example.com/custom-scripts.toml",
+]
 ```
 
 ## 🔧 脚本说明
@@ -186,18 +284,64 @@ m
 4. **定期更新**：保持系统和脚本最新版本
 5. **备份数据**：重要数据及时备份
 
-## 📝 许可证
-
-本项目采用 MIT 许可证，详见 [LICENSE](LICENSE) 文件。
-
 ## 🤝 贡献指南
 
 欢迎提交 Issue 和 Pull Request！
 
-### 贡献步骤
+### 贡献方式
+
+1. **报告问题**：在 Issues 中描述遇到的问题
+2. **功能建议**：在 Discussions 中讨论新功能
+3. **代码贡献**：Fork 本仓库，提交 PR
+
+### 开发流程
+
+详见 [DEVELOPMENT.md](./DEVELOPMENT.md) 和 [CONTRIBUTING.md](./CONTRIBUTING.md)
+
+#### 快速开始
 
 1. Fork 本仓库
-2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
+2. 创建功能分支
+   ```bash
+   git checkout -b feature/AmazingFeature
+   ```
+3. 提交更改
+   ```bash
+   git commit -m '[Feat] Add some AmazingFeature'
+   ```
+4. 推送到分支
+   ```bash
+   git push origin feature/AmazingFeature
+   ```
+5. 创建 Pull Request
+
+### 代码规范
+
+- 脚本文件放在 `scripts/` 相应子目录
+- 模块配置放在 `modules.d/default/`
+- 遵循项目命名和编码规范
+- 添加必要的注释和文档
+
+## 📚 相关项目
+
+- [NodeScriptKit](https://github.com/NodeSeekDev/NodeScriptKit) - 本项目的灵感来源
+- 感谢 NodeScriptKit 提供的优秀架构设计
+
+## 📝 更新日志
+
+### v2.0.0 (2024)
+
+- ✨ 采用模块化架构，使用 TOML 配置文件
+- ✨ 支持本地扩展和远程订阅
+- ✨ 重构目录结构，更清晰的组织方式
+- ✨ 添加配置系统，灵活管理菜单和脚本
+- ✨ 保持向后兼容，支持旧版 `m` 命令
+- 📝 完善文档，添加开发指南
+
+### v1.0.0
+
+- 🎉 初始版本发布
+- ✅ 基础功能实现
 3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
 4. 推送到分支 (`git push origin feature/AmazingFeature`)
 5. 提交 Pull Request

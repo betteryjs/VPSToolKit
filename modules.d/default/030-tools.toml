@@ -1,0 +1,18 @@
+[scripts]
+# 实用工具脚本
+
+# Speedtest 网络测速
+tools_speedtest = "bash /usr/local/vpstoolkit/scripts/tools/speedtest.sh"
+
+
+[[menus]]
+id = "utility_tools"
+title = "实用工具"
+sub_menus = [
+    "tools_speedtest",
+]
+
+[[menus]]
+id = "tools_speedtest"
+title = "Speedtest 网络测速"
+script = "tools_speedtest"
