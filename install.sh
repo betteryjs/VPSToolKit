@@ -13,7 +13,7 @@ set -e
 INSTALL_DIR="/usr/local/bin"
 CONFIG_DIR="/etc/vpstoolkit"
 MODULES_DIR="${CONFIG_DIR}/modules.d"
-MAIN_SCRIPT="vtk"
+MAIN_SCRIPT="m"
 DOWNLOAD_SOURCE=""
 
 # 颜色定义
@@ -133,16 +133,13 @@ download_config_files() {
 download_main_script() {
 	echo -e "${Info} 正在下载主脚本..."
 	
-	# 下载 vtk 主脚本
-	wget --no-check-certificate -q -O "${INSTALL_DIR}/${MAIN_SCRIPT}" "${BASE_URL}/vtk"
+	# 下载 m 主脚本
+	wget --no-check-certificate -q -O "${INSTALL_DIR}/${MAIN_SCRIPT}" "${BASE_URL}/m.sh"
 	chmod +x "${INSTALL_DIR}/${MAIN_SCRIPT}"
 	
 	# 下载 menu.sh 菜单脚本
 	wget --no-check-certificate -q -O "${CONFIG_DIR}/menu.sh" "${BASE_URL}/menu.sh"
 	chmod +x "${CONFIG_DIR}/menu.sh"
-	
-	# 创建软链接
-	ln -sf "${INSTALL_DIR}/${MAIN_SCRIPT}" "${INSTALL_DIR}/m"
 	
 	echo -e "${Success} 主脚本下载完成！"
 }
@@ -158,7 +155,7 @@ show_usage() {
 ${Green}使用方法：${Reset}
 
 1. 运行主菜单：
-   ${Yellow}vtk${Reset} 或 ${Yellow}m${Reset}
+   ${Yellow}m${Reset}
 
 ${Green}功能列表：${Reset}
 
