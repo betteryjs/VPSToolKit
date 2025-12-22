@@ -535,19 +535,17 @@ start_menu(){
 ==================状态==================
  Shadowsocks Rust : [${status_show}]
 ========================================
- ${Green_font_prefix}1.${Font_color_suffix}  更新脚本
-==================菜单==================
- ${Green_font_prefix}2.${Font_color_suffix}  安装 Shadowsocks Rust
- ${Green_font_prefix}3.${Font_color_suffix}  更新 Shadowsocks Rust
- ${Green_font_prefix}4.${Font_color_suffix}  卸载 Shadowsocks Rust
+ ${Green_font_prefix}1.${Font_color_suffix}  安装 Shadowsocks Rust
+ ${Green_font_prefix}2.${Font_color_suffix}  更新 Shadowsocks Rust
+ ${Green_font_prefix}3.${Font_color_suffix}  卸载 Shadowsocks Rust
 ————————————————————————————————————————
- ${Green_font_prefix}5.${Font_color_suffix}  启动 Shadowsocks Rust
- ${Green_font_prefix}6.${Font_color_suffix}  停止 Shadowsocks Rust
- ${Green_font_prefix}7.${Font_color_suffix}  重启 Shadowsocks Rust
+ ${Green_font_prefix}4.${Font_color_suffix}  启动 Shadowsocks Rust
+ ${Green_font_prefix}5.${Font_color_suffix}  停止 Shadowsocks Rust
+ ${Green_font_prefix}6.${Font_color_suffix}  重启 Shadowsocks Rust
 ————————————————————————————————————————
- ${Green_font_prefix}8.${Font_color_suffix}  修改 Shadowsocks Rust 配置
- ${Green_font_prefix}9.${Font_color_suffix}  查看 Shadowsocks Rust 配置
- ${Green_font_prefix}10.${Font_color_suffix}  查看 Shadowsocks Rust 状态
+ ${Green_font_prefix}7.${Font_color_suffix}  修改 Shadowsocks Rust 配置
+ ${Green_font_prefix}8.${Font_color_suffix}  查看 Shadowsocks Rust 配置
+ ${Green_font_prefix}9.${Font_color_suffix}  查看 Shadowsocks Rust 状态
 ————————————————————————————————————————
  ${Green_font_prefix}0.${Font_color_suffix} 退出脚本
 ========================================" && echo
@@ -555,33 +553,30 @@ start_menu(){
 	read -e -p " 请输入数字 [0-9]：" num
 	case "$num" in
 		1)
-		update_sh
-		;;
-		2)
 		install
 		;;
-		3)
+		2)
 		update
 		;;
-		4)
+		3)
 		uninstall
 		;;
-		5)
+		4)
 		start
 		;;
-		6)
+		5)
 		stop
 		;;
-		7)
+		6)
 		restart
 		;;
-		8)
+		7)
 		set_config
 		;;
-		9)
+		8)
 		view
 		;;
-		10)
+		9)
 		view_status
 		;;
 		0)
