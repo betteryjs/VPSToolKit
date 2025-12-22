@@ -36,19 +36,27 @@ menu_stack=()
 # 获取脚本的远程 URL
 get_script_url() {
     local script_path=$1
-    local script_name="${script_path#${SCRIPTS_DIR}/}"
     
-    # 根据环境变量或默认值选择下载源
-    local download_source="${VTK_DOWNLOAD_SOURCE:-oss}"
-    local download_url
-    
-    if [[ "${download_source}" == "oss" ]]; then
-        download_url="https://oss.naloong.de/VPSToolKit/scripts/${script_name}"
-    else
-        download_url="https://raw.githubusercontent.com/betteryjs/VPSToolKit/master/scripts/${script_name}"
+    # 如果已经是完整 URL，直接返回
+    if [[ "$script_path" =~ ^https?:// ]]; then
+        echo "$script_path"
+        return
     fi
     
-    echo "$download_url"
+    # 如果是相对路径（如 scripts/proxy/anytls.sh），根据环境变量构建 URL
+    if [[ "$script_path" =~ ^scripts/ ]]; then
+        local download_source="${VTK_DOWNLOAD_SOURCE:-oss}"
+        
+        if [[ "${download_source}" == "oss" ]]; then
+            echo "https://oss.naloong.de/VPSToolKit/${script_path}"
+        else
+            echo "https://raw.githubusercontent.com/betteryjs/VPSToolKit/master/${script_path}"
+        fi
+        return
+    fi
+    
+    # 其他情况（本地路径等），直接返回
+    echo "$script_path"
 }
 
 # 清屏并隐藏光标

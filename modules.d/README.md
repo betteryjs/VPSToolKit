@@ -31,9 +31,9 @@ vim /etc/vpstoolkit/modules.d/100-custom.toml
 示例：
 
 ```toml
-# 自定义脚本定义
+# 自定义脚本定义（在线执行模式）
 [scripts]
-custom_script = "bash /path/to/custom.sh"
+custom_script = "bash <(curl -sL https://example.com/custom.sh)"
 
 # 添加到主菜单
 [[menus]]
@@ -49,6 +49,8 @@ id = "custom_menu"
 title = "我的自定义功能"
 script = "custom_script"
 ```
+
+> 💡 **提示**：VPSToolKit 使用在线执行模式，脚本不会保存到本地，每次执行都从远程获取最新版本。你也可以使用本地路径：`bash /path/to/local.sh`
 
 ## 优先级说明
 

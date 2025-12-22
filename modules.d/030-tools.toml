@@ -2,7 +2,7 @@
 # 实用工具脚本
 
 # Speedtest 网络测速
-tools_speedtest = "bash <(curl -sL https://oss.naloong.de/VPSToolKit/scripts/tools/speedtest.sh)"
+tools_speedtest = "scripts/tools/speedtest.sh"
 
 
 [[menus]]
