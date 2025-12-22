@@ -141,7 +141,15 @@ show_help() {
         if [ "${MENU_CHILDREN[$selected_id]}" = "1" ]; then
             echo "回车进入${selected_title}菜单"
         else
-            echo "回车执行${selected_title}"
+            # 显示实际要执行的命令
+            local action="${MENU_ACTIONS[$selected_id]}"
+            if [ -n "$action" ]; then
+                local script_url=$(get_script_url "$action")
+                echo "回车执行命令令："
+                echo "  bash <(curl -sL ${script_url})"
+            else
+                echo "回车执行${selected_title}"
+            fi
         fi
     else
         if [ ${#menu_stack[@]} -gt 0 ]; then
@@ -327,33 +335,13 @@ handle_selection() {
         if [ $exit_code -ne 0 ]; then
             echo ""
             echo -e "${Red_font}[错误]${Reset} 脚本执行失败或网络错误！"
-            echo -e "${Yellow_font}按回车键返回菜单...${Reset}"
-            read
-            hide_cursor
-            return
         fi
         
-        # 二级菜单
+        # 脚本执行完毕，提示后返回当前菜单
         echo ""
-        echo "========================================"
-        echo -e " ${Green_font}1.${Reset} 返回主菜单"
-        echo -e " ${Green_font}0.${Reset} 退出脚本"
-        echo "========================================"
-        read -e -p " 请选择 [0-1]：" choice
-        
-        case "$choice" in
-            1|"")
-                hide_cursor
-                ;;
-            0)
-                show_cursor
-                echo -e "${Green_font}感谢使用 VPSToolKit！${Reset}"
-                exit 0
-                ;;
-            *)
-                hide_cursor
-                ;;
-        esac
+        echo -e "${Yellow_font}按回车键返回菜单...${Reset}"
+        read
+        hide_cursor
     fi
 }
 
