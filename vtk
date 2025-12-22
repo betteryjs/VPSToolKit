@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
+export PATH
+
+#=================================================
+#	Description: VPSToolKit 交互式菜单主入口
+#	Version: 2.0.0
+#	Author: VPSToolKit Contributors
+#=================================================
+
+# 配置路径
+CONFIG_DIR="/etc/vpstoolkit"
+MODULES_DIR="${CONFIG_DIR}/modules.d"
+ENV_FILE="${CONFIG_DIR}/env"
+
+# 加载环境配置
+if [ -f "${ENV_FILE}" ]; then
+    source "${ENV_FILE}"
+fi
+
+# 颜色定义
+Green="\033[32m"
+Red="\033[31m"
+Yellow="\033[0;33m"
+Reset="\033[0m"
+
+# 检查更新
+check_update() {
+    local remote_version
+    local base_url
+    
+    if [[ "${VTK_DOWNLOAD_SOURCE}" == "oss" ]]; then
+        base_url="https://oss.naloong.de/VPSToolKit"
+    else
+        base_url="https://raw.githubusercontent.com/betteryjs/VPSToolKit/master"
+    fi
+    
+    remote_version=$(curl -s "${base_url}/version" 2>/dev/null || echo "")
+    
+    if [ -z "$remote_version" ]; then
+        return
+    fi
+    
+    local local_version=$(cat "${CONFIG_DIR}/version" 2>/dev/null || echo "unknown")
+    
+    if [ "$remote_version" != "$local_version" ]; then
+        echo -e "${Yellow}检测到新版本 ${remote_version}，是否更新？[y/N]${Reset}"
+        read -t 10 -r ans
+        if [[ "$ans" =~ ^[Yy]$ ]]; then
+            echo -e "${Green}[信息]${Reset} 正在更新..."
+            bash <(curl -sL "${base_url}/install.sh")
+            exit 0
+        else
+            echo -e "${Green}[信息]${Reset} 已跳过更新"
+        fi
+    fi
+}
+
+# 主函数
+main() {
+    check_update
+    
+    # 启动菜单脚本
+    if [ -f "${CONFIG_DIR}/menu.sh" ]; then
+        bash "${CONFIG_DIR}/menu.sh"
+    else
+        echo -e "${Red}[错误]${Reset} 菜单脚本不存在，请重新安装"
+        exit 1
+    fi
+}
+
+main
