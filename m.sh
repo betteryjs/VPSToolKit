@@ -4,13 +4,26 @@ export PATH
 
 #=================================================
 #	System Required: CentOS/Debian/Ubuntu
-#	Description: 统一管理脚本（兼容旧版本）
+#	Description: 统一管理脚本（交互式版本）
 #	功能：整合所有服务管理脚本
-#	注意：本脚本保留用于向后兼容，建议使用新的 vtk 命令
+#	Version: 2.0.0
 #=================================================
 
 sh_ver="2.0.0"
 
+# 检查是否有交互式菜单脚本
+INTERACTIVE_SCRIPT="/usr/local/vpstoolkit/scripts/vtk-interactive.sh"
+if [ ! -f "$INTERACTIVE_SCRIPT" ]; then
+    INTERACTIVE_SCRIPT="/usr/local/vpstoolkit/vtk-interactive.sh"
+fi
+
+if [ -f "$INTERACTIVE_SCRIPT" ]; then
+    # 使用交互式菜单
+    bash "$INTERACTIVE_SCRIPT"
+    exit 0
+fi
+
+# 如果没有交互式脚本，使用传统模式
 Green_font_prefix="\033[32m"
 Red_font_prefix="\033[31m"
 Yellow_font_prefix="\033[0;33m"

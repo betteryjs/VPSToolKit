@@ -161,6 +161,15 @@ download_main_script(){
 		download_url="https://oss.naloong.de/VPSToolKit"
 	fi
 	
+	# 下载交互式菜单脚本
+	wget --no-check-certificate -O "${SCRIPTS_DIR}/vtk-interactive.sh" "${download_url}/vtk-interactive.sh"
+	if [[ -e "${SCRIPTS_DIR}/vtk-interactive.sh" ]]; then
+		chmod +x "${SCRIPTS_DIR}/vtk-interactive.sh"
+		echo -e "${Success} 交互式菜单脚本下载成功！"
+	else
+		echo -e "${Info} 交互式菜单脚本下载失败，将使用传统模式"
+	fi
+	
 	# 下载 m.sh（兼容旧版本）
 	wget --no-check-certificate -O "${INSTALL_DIR}/${MAIN_SCRIPT}" "${download_url}/m.sh"
 	
