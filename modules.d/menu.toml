@@ -2,9 +2,9 @@
 id = "main"
 title = "VPSToolKit 主菜单"
 sub_menus = [
-    "proxy_services",
-    "system_tools",
-    "utility_tools",
+    "proxy",
+    "system",
+    "tools",
 ]
 titles = [
     "代理服务管理",

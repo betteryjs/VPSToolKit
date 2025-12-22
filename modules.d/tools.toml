@@ -6,13 +6,13 @@ tools_speedtest = "scripts/tools/speedtest.sh"
 
 
 [[menus]]
-id = "utility_tools"
+id = "tools"
 title = "实用工具"
 sub_menus = [
     "tools_speedtest",
 ]
 
-[[menus]]
+[[menu]]
 id = "tools_speedtest"
 title = "Speedtest 网络测速"
 script = "tools_speedtest"

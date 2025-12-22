@@ -3,13 +3,14 @@ PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
 export PATH
 
 #=================================================
-#	Description: VPSToolKit 主脚本（兼容性入口）
+#	Description: VPSToolKit 交互式菜单主入口
 #	Version: 2.0.0
 #	Author: VPSToolKit Contributors
 #=================================================
 
 # 配置路径
 CONFIG_DIR="/etc/vpstoolkit"
+MODULES_DIR="${CONFIG_DIR}/modules.d"
 ENV_FILE="${CONFIG_DIR}/env"
 
 # 加载环境配置

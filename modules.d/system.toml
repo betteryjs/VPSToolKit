@@ -9,19 +9,19 @@ system_dd = "scripts/system/dd.sh"
 
 
 [[menus]]
-id = "system_tools"
+id = "system"
 title = "系统工具"
 sub_menus = [
     "system_bbr",
     "system_dd",
 ]
 
-[[menus]]
+[[menu]]
 id = "system_bbr"
 title = "BBR 加速管理"
 script = "system_bbr"
 
-[[menus]]
+[[menu]]
 id = "system_dd"
 title = "DD 重装系统"
 script = "system_dd"

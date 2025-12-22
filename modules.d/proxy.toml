@@ -18,7 +18,7 @@ proxy_snell5 = "scripts/proxy/snell5.sh"
 
 
 [[menus]]
-id = "proxy_services"
+id = "proxy"
 title = "代理服务管理"
 sub_menus = [
     "proxy_anytls",
@@ -28,27 +28,27 @@ sub_menus = [
     "proxy_snell5",
 ]
 
-[[menus]]
+[[menu]]
 id = "proxy_anytls"
 title = "AnyTLS 管理"
 script = "proxy_anytls"
 
-[[menus]]
+[[menu]]
 id = "proxy_ss"
 title = "Shadowsocks 管理"
 script = "proxy_ss"
 
-[[menus]]
+[[menu]]
 id = "proxy_trojan"
 title = "Trojan-Go 管理"
 script = "proxy_trojan"
 
-[[menus]]
+[[menu]]
 id = "proxy_snell4"
 title = "Snell v4 管理"
 script = "proxy_snell4"
 
-[[menus]]
+[[menu]]
 id = "proxy_snell5"
 title = "Snell v5 管理"
 script = "proxy_snell5"
