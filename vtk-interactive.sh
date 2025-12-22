@@ -19,6 +19,7 @@ Reset="\033[0m"
 # 配置文件路径
 CONFIG_DIR="/etc/vpstoolkit"
 CONFIG_FILE="${CONFIG_DIR}/config.toml"
+MODULES_DIR="${CONFIG_DIR}/modules.d"
 SCRIPTS_DIR="/usr/local/vpstoolkit/scripts"
 ENV_FILE="${CONFIG_DIR}/env"
 
