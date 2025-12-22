@@ -261,33 +261,33 @@ parse_toml_key_value() {
     done < "$file"
 }
 
-# 加载主菜单配置（从 000-menu.toml 加载）
+# 加载主菜单配置（从 menu.toml 加载）
 load_main_menu() {
     MENU_IDS=()
     MENU_TITLES=()
     MENU_CHILDREN=()
     MENU_ACTIONS=()
     
-    local menu_file="${MODULES_DIR}/000-menu.toml"
+    local menu_file="${MODULES_DIR}/menu.toml"
     
     if [ ! -f "$menu_file" ]; then
         echo "Error: Main menu file not found: $menu_file" >&2
         return 1
     fi
     
-    # 读取 sub_menus
-    while IFS= read -r menu_id; do
-        MENU_IDS+=("$menu_id")
-        MENU_CHILDREN["$menu_id"]="1"
-    done < <(parse_toml_array "$menu_file" "sub_menus")
+    # 读取 sub_menus 和 titles 数组
+    local menu_ids=($(parse_toml_array "$menu_file" "sub_menus"))
+    local menu_titles=($(parse_toml_array "$menu_file" "titles"))
     
-    # 读取 titles
-    while IFS= read -r title; do
-        MENU_TITLES+=("$title")
-    done < <(parse_toml_array "$menu_file" "titles")
+    # 填充数组
+    for i in "${!menu_ids[@]}"; do
+        MENU_IDS+=("${menu_ids[$i]}")
+        MENU_TITLES+=("${menu_titles[$i]}")
+        MENU_CHILDREN["${menu_ids[$i]}"]="1"
+    done
 }
 
-# 加载二级菜单（从 01x-*.toml 等文件加载）
+# 加载二级菜单（从 proxy.toml, system.toml, tools.toml 等文件加载）
 load_submenu() {
     local menu_id=$1
     
@@ -296,73 +296,51 @@ load_submenu() {
     MENU_CHILDREN=()
     MENU_ACTIONS=()
     
-    # 在所有非 menu 的 toml 文件中查找
-    local found=0
-    for toml_file in "${MODULES_DIR}"/*.toml; do
-        [ -f "$toml_file" ] || continue
+    # 查找包含该菜单的 TOML 文件（排除 menu.toml）
+    local toml_file=""
+    for file in "${MODULES_DIR}"/*.toml; do
+        [ -f "$file" ] || continue
         
-        # 跳过 menu 文件
-        [[ "$toml_file" =~ menu\.toml$ ]] && continue
+        # 跳过主菜单文件
+        local basename=$(basename "$file")
+        [[ "$basename" == "menu.toml" ]] && continue
         
         # 检查是否包含目标菜单
-        if grep -q "^[[:space:]]*id[[:space:]]*=[[:space:]]*\"$menu_id\"" "$toml_file"; then
-            found=1
-            
-            # 读取该菜单的 sub_menus
-            while IFS= read -r sub_id; do
-                MENU_IDS+=("$sub_id")
-            done < <(parse_toml_array "$toml_file" "sub_menus")
-            
-            # 为每个子菜单项读取详情
-            for item_id in "${MENU_IDS[@]}"; do
-                local title=""
-                local script_key=""
-                local in_menu=0
-                local current_id=""
-                
-                while IFS= read -r line; do
-                    if [[ "$line" =~ ^\[\[menus\]\] ]]; then
-                        in_menu=1
-                        current_id=""
-                        continue
-                    fi
-                    
-                    if [ $in_menu -eq 1 ]; then
-                        if [[ "$line" =~ ^[[:space:]]*id[[:space:]]*=[[:space:]]*\"(.*)\" ]]; then
-                            current_id="${BASH_REMATCH[1]}"
-                        fi
-                        
-                        if [ "$current_id" = "$item_id" ]; then
-                            if [[ "$line" =~ ^[[:space:]]*title[[:space:]]*=[[:space:]]*\"(.*)\" ]]; then
-                                title="${BASH_REMATCH[1]}"
-                            fi
-                            
-                            if [[ "$line" =~ ^[[:space:]]*script[[:space:]]*=[[:space:]]*\"(.*)\" ]]; then
-                                script_key="${BASH_REMATCH[1]}"
-                            fi
-                            
-                            if [ -n "$title" ] && [ -n "$script_key" ]; then
-                                break
-                            fi
-                        fi
-                    fi
-                done < "$toml_file"
-                
-                MENU_TITLES+=("$title")
-                
-                # 查找脚本路径
-                local script_path=$(parse_toml_key_value "$toml_file" "$script_key")
-                MENU_ACTIONS["$item_id"]="$script_path"
-            done
-            
+        if grep -q "^[[:space:]]*id[[:space:]]*=[[:space:]]*\"$menu_id\"" "$file"; then
+            toml_file="$file"
             break
         fi
     done
     
-    if [ $found -eq 0 ]; then
+    if [ -z "$toml_file" ]; then
         echo "Error: Menu '$menu_id' not found in any TOML file" >&2
         return 1
     fi
+    
+    # 读取 sub_menus 数组
+    local sub_ids=($(parse_toml_array "$toml_file" "sub_menus"))
+    
+    # 为每个子菜单项读取信息
+    for item_id in "${sub_ids[@]}"; do
+        MENU_IDS+=("$item_id")
+        
+        # 读取 title
+        local title=$(grep -A 10 "^[[:space:]]*id[[:space:]]*=[[:space:]]*\"$item_id\"" "$toml_file" | \
+                     grep -m 1 "^[[:space:]]*title[[:space:]]*=" | \
+                     sed 's/^[[:space:]]*title[[:space:]]*=[[:space:]]*"\(.*\)"[[:space:]]*$/\1/')
+        MENU_TITLES+=("$title")
+        
+        # 读取 script key
+        local script_key=$(grep -A 10 "^[[:space:]]*id[[:space:]]*=[[:space:]]*\"$item_id\"" "$toml_file" | \
+                          grep -m 1 "^[[:space:]]*script[[:space:]]*=" | \
+                          sed 's/^[[:space:]]*script[[:space:]]*=[[:space:]]*"\(.*\)"[[:space:]]*$/\1/')
+        
+        # 通过 script key 查找实际路径
+        if [ -n "$script_key" ]; then
+            local script_path=$(parse_toml_key_value "$toml_file" "$script_key")
+            MENU_ACTIONS["$item_id"]="$script_path"
+        fi
+    done
     
     return 0
 }
@@ -388,10 +366,12 @@ get_menu_title() {
         return
     fi
     
-    # 从非 menu 的 TOML 文件中查找标题
+    # 从 TOML 文件中查找标题（排除 menu.toml）
     for toml_file in "${MODULES_DIR}"/*.toml; do
         [ -f "$toml_file" ] || continue
-        [[ "$toml_file" =~ menu\.toml$ ]] && continue
+        
+        local basename=$(basename "$toml_file")
+        [[ "$basename" == "menu.toml" ]] && continue
         
         local in_menu=0
         local current_id=""
@@ -453,12 +433,6 @@ render_menu() {
 # 处理选择
 handle_selection() {
     local selected_id="${MENU_IDS[$current_selection]}"
-    
-    # 调试信息
-    echo "Debug: selected_id=$selected_id" >&2
-    echo "Debug: MENU_CHILDREN[$selected_id]=${MENU_CHILDREN[$selected_id]}" >&2
-    echo "Debug: MENU_ACTIONS[$selected_id]=${MENU_ACTIONS[$selected_id]}" >&2
-    read -p "Press enter to continue..."
     
     # 检查是否有子菜单
     if [ "${MENU_CHILDREN[$selected_id]}" = "1" ]; then
