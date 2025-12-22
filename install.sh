@@ -107,7 +107,7 @@ create_directories(){
 	mkdir -p "${SCRIPTS_DIR}"/{proxy,system,tools}
 	
 	# 创建配置目录
-	mkdir -p "${MODULES_DIR}"/{default,extend}
+	mkdir -p "${MODULES_DIR}"
 	
 	echo -e "${Success} 目录结构创建完成！"
 }
@@ -126,10 +126,10 @@ download_config_files(){
 	wget --no-check-certificate -O "${CONFIG_DIR}/config.toml" "${config_base_url}/config.toml"
 	
 	# 下载模块配置文件
-	wget --no-check-certificate -O "${MODULES_DIR}/default/000-menu.toml" "${config_base_url}/modules.d/default/000-menu.toml"
-	wget --no-check-certificate -O "${MODULES_DIR}/default/010-proxy.toml" "${config_base_url}/modules.d/default/010-proxy.toml"
-	wget --no-check-certificate -O "${MODULES_DIR}/default/020-system.toml" "${config_base_url}/modules.d/default/020-system.toml"
-	wget --no-check-certificate -O "${MODULES_DIR}/default/030-tools.toml" "${config_base_url}/modules.d/default/030-tools.toml"
+	wget --no-check-certificate -O "${MODULES_DIR}/000-menu.toml" "${config_base_url}/modules.d/000-menu.toml"
+	wget --no-check-certificate -O "${MODULES_DIR}/010-proxy.toml" "${config_base_url}/modules.d/010-proxy.toml"
+	wget --no-check-certificate -O "${MODULES_DIR}/020-system.toml" "${config_base_url}/modules.d/020-system.toml"
+	wget --no-check-certificate -O "${MODULES_DIR}/030-tools.toml" "${config_base_url}/modules.d/030-tools.toml"
 	
 	# 写入版本信息
 	echo "${SCRIPT_VERSION}" > "${CONFIG_DIR}/version"
@@ -218,7 +218,7 @@ show_usage(){
 
 ${Green_font_prefix}使用方法：${Font_color_suffix}
 
-1. 运行主菜单（兼容模式）：
+1. 运行主菜单（交互式模式）：
    ${Yellow_font_prefix}m${Font_color_suffix}
    
 2. 或使用完整路径：
@@ -239,7 +239,11 @@ ${Green_font_prefix}功能列表：${Font_color_suffix}
 
 ${Green_font_prefix}配置文件位置：${Font_color_suffix}
   主配置：${CONFIG_DIR}/config.toml
-  模块配置：${MODULES_DIR}/
+  模块配置：${MODULES_DIR}/*.toml
+
+${Green_font_prefix}自定义扩展：${Font_color_suffix}
+  在 ${MODULES_DIR}/ 下创建自定义 .toml 配置文件
+  使用更高的数字前缀（如 100-custom.toml）
 
 ${Green_font_prefix}项目地址：${Font_color_suffix}
   https://github.com/betteryjs/VPSToolKit

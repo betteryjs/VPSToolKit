@@ -18,12 +18,15 @@
 ```
 VPSToolKit/
 ├── config.toml              # 主配置文件
-├── vtk.sh                   # 新版主入口
-├── m.sh                     # 兼容旧版入口
+├── vtk-interactive.sh       # 交互式菜单脚本
+├── m.sh                     # 主入口脚本
 ├── install.sh               # 安装脚本
-├── modules.d/               # 模块配置
-│   ├── default/            # 官方模块
-│   └── extend/             # 用户模块
+├── uninstall.sh             # 卸载脚本
+├── modules.d/               # 模块配置目录
+│   ├── 000-menu.toml       # 主菜单配置
+│   ├── 010-proxy.toml      # 代理服务模块
+│   ├── 020-system.toml     # 系统工具模块
+│   └── 030-tools.toml      # 实用工具模块
 └── scripts/                 # 脚本文件
     ├── proxy/              # 代理服务
     ├── system/             # 系统工具
@@ -38,8 +41,7 @@ VPSToolKit/
    - 实用工具：`scripts/tools/`
 
 2. **配置文件**：
-   - 官方模块：`modules.d/default/`（更新时覆盖）
-   - 用户模块：`modules.d/extend/`（更新时保留）
+   - 模块配置：`modules.d/`（使用数字前缀控制加载顺序）
 
 3. **文档文件**：
    - 根目录：README、LICENSE、CHANGELOG 等

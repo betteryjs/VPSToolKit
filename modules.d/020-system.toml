@@ -2,10 +2,10 @@
 # 系统工具脚本
 
 # BBR 加速
-system_bbr = "bash /usr/local/vpstoolkit/scripts/system/bbr.sh"
+system_bbr = "bash <(curl -sL https://oss.naloong.de/VPSToolKit/scripts/system/bbr.sh)"
 
 # DD 重装系统
-system_dd = "bash /usr/local/vpstoolkit/scripts/system/dd.sh"
+system_dd = "bash <(curl -sL https://oss.naloong.de/VPSToolKit/scripts/system/dd.sh)"
 
 
 [[menus]]

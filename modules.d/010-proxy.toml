@@ -2,19 +2,19 @@
 # 代理服务管理脚本
 
 # AnyTLS
-proxy_anytls = "bash /usr/local/vpstoolkit/scripts/proxy/anytls.sh"
+proxy_anytls = "bash <(curl -sL https://oss.naloong.de/VPSToolKit/scripts/proxy/anytls.sh)"
 
 # Shadowsocks
-proxy_ss = "bash /usr/local/vpstoolkit/scripts/proxy/ss.sh"
+proxy_ss = "bash <(curl -sL https://oss.naloong.de/VPSToolKit/scripts/proxy/ss.sh)"
 
 # Trojan-Go
-proxy_trojan = "bash /usr/local/vpstoolkit/scripts/proxy/trojan.sh"
+proxy_trojan = "bash <(curl -sL https://oss.naloong.de/VPSToolKit/scripts/proxy/trojan.sh)"
 
 # Snell v4
-proxy_snell4 = "bash /usr/local/vpstoolkit/scripts/proxy/snell4.sh"
+proxy_snell4 = "bash <(curl -sL https://oss.naloong.de/VPSToolKit/scripts/proxy/snell4.sh)"
 
 # Snell v5
-proxy_snell5 = "bash /usr/local/vpstoolkit/scripts/proxy/snell5.sh"
+proxy_snell5 = "bash <(curl -sL https://oss.naloong.de/VPSToolKit/scripts/proxy/snell5.sh)"
 
 
 [[menus]]

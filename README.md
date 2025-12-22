@@ -113,12 +113,10 @@ VPSToolKit/
 ├── m.sh                    # 兼容旧版入口脚本
 ├── install.sh              # 一键安装脚本
 ├── modules.d/              # 模块配置目录
-│   ├── default/           # 官方默认模块
-│   │   ├── 000-menu.toml  # 主菜单配置
-│   │   ├── 010-proxy.toml # 代理服务模块
-│   │   ├── 020-system.toml# 系统工具模块
-│   │   └── 030-tools.toml # 实用工具模块
-│   └── extend/            # 用户自定义模块
+│   ├── 000-menu.toml      # 主菜单配置
+│   ├── 010-proxy.toml     # 代理服务模块
+│   ├── 020-system.toml    # 系统工具模块
+│   └── 030-tools.toml     # 实用工具模块
 └── scripts/               # 脚本目录
     ├── proxy/            # 代理服务脚本
     │   ├── anytls.sh
@@ -148,8 +146,7 @@ entry = 'main'
 
 [local]
 include = [
-    '/etc/vpstoolkit/modules.d/default/*.toml',
-    '/etc/vpstoolkit/modules.d/extend/*.toml',
+    '/etc/vpstoolkit/modules.d/*.toml',
 ]
 
 [remote]
@@ -177,11 +174,11 @@ script = "proxy_ss"
 
 ### 扩展配置
 
-你可以在 `/etc/vpstoolkit/modules.d/extend/` 目录下创建自定义配置：
+你可以在 `/etc/vpstoolkit/modules.d/` 目录下创建自定义配置：
 
 ```bash
-# 创建自定义配置
-vim /etc/vpstoolkit/modules.d/extend/100-custom.toml
+# 创建自定义配置（使用更高的数字前缀）
+vim /etc/vpstoolkit/modules.d/100-custom.toml
 ```
 
 ```toml
@@ -200,6 +197,8 @@ id = "custom_menu"
 title = "自定义功能"
 script = "custom_script"
 ```
+
+> 💡 **提示**：配置文件使用数字前缀（000-999）控制加载顺序，数字越大优先级越高，后加载的配置可以覆盖先加载的配置。
 
 ### 远程订阅
 

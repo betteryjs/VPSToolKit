@@ -16,8 +16,7 @@ entry = 'main'
 
 [local]
 include = [
-    '/etc/vpstoolkit/modules.d/default/*.toml',
-    '/etc/vpstoolkit/modules.d/extend/*.toml',
+    '/etc/vpstoolkit/modules.d/*.toml',
 ]
 
 [remote]
