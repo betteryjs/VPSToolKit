@@ -219,9 +219,6 @@ ${Yellow_font_prefix}系统工具${Font_color_suffix}
 			;;
 	esac
 }
-			;;
-	esac
-}
 
 # 脚本执行入口
 check_root
