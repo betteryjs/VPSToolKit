@@ -28,11 +28,11 @@ if [ -f "${ENV_FILE}" ]; then
     source "${ENV_FILE}"
 fi
 
-# 菜单项数组
-declare -a MENU_IDS
-declare -a MENU_TITLES
-declare -A MENU_ACTIONS
-declare -A MENU_CHILDREN
+# 菜单项数组（全局声明）
+declare -ga MENU_IDS
+declare -ga MENU_TITLES
+declare -gA MENU_ACTIONS
+declare -gA MENU_CHILDREN
 
 # 当前选择
 current_selection=0
@@ -266,10 +266,11 @@ load_submenu_from_toml() {
     local menu_id=$1
     local toml_file=$2
     
+    # 清空全局数组
     MENU_IDS=()
     MENU_TITLES=()
-    declare -gA MENU_ACTIONS
-    declare -gA MENU_CHILDREN
+    MENU_ACTIONS=()
+    MENU_CHILDREN=()
     
     if [ ! -f "$toml_file" ]; then
         echo "Error: TOML file not found: $toml_file" >&2
@@ -281,6 +282,7 @@ load_submenu_from_toml() {
     local in_menu=0
     local in_target_menu=0
     
+    # 首先查找目标菜单的 sub_menus
     while IFS= read -r line; do
         # 检测 [[menus]] 开始
         if [[ "$line" =~ ^\[\[menus\]\] ]]; then
@@ -309,6 +311,12 @@ load_submenu_from_toml() {
             fi
         fi
     done < "$toml_file"
+    
+    # 调试输出
+    # echo "Debug: Found ${#MENU_IDS[@]} sub-menu items" >&2
+    # for id in "${MENU_IDS[@]}"; do
+    #     echo "  - $id" >&2
+    # done
     
     # 为每个 sub_menu 读取 title 和 script
     for menu_item_id in "${MENU_IDS[@]}"; do
@@ -361,10 +369,11 @@ load_submenu_from_toml() {
 
 # 加载主菜单配置（从 TOML 加载）
 load_main_menu() {
+    # 清空全局数组
     MENU_IDS=()
     MENU_TITLES=()
-    declare -gA MENU_CHILDREN
-    declare -gA MENU_ACTIONS
+    MENU_CHILDREN=()
+    MENU_ACTIONS=()
     
     local menu_config="${MODULES_DIR}/000-menu.toml"
     
