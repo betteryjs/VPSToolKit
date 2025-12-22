@@ -54,7 +54,7 @@ check_system() {
 
 # 选择下载源
 select_download_source() {
-	clear
+	# clear
 	echo -e "
 ========================================
     选择下载源
