@@ -346,10 +346,28 @@ handle_selection() {
         
         # 执行脚本
         bash "$action"
+        
+        # 二级菜单
         echo ""
-        echo -e "${Yellow_font}按回车键返回菜单...${Reset}"
-        read
-        hide_cursor
+        echo "========================================"
+        echo -e " ${Green_font}1.${Reset} 返回主菜单"
+        echo -e " ${Green_font}0.${Reset} 退出脚本"
+        echo "========================================"
+        read -e -p " 请选择 [0-1]：" choice
+        
+        case "$choice" in
+            1|"")
+                hide_cursor
+                ;;
+            0)
+                show_cursor
+                echo -e "${Green_font}感谢使用 VPSToolKit！${Reset}"
+                exit 0
+                ;;
+            *)
+                hide_cursor
+                ;;
+        esac
     fi
 }
 
