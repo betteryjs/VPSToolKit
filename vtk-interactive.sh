@@ -130,10 +130,9 @@ show_help() {
             echo "回车退出程序"
         fi
     fi
-    
     echo ""
-    echo -e "使用${Green_font}↑/↓${Reset}或者${Green_font}j/k${Reset}来移动光标"
-    echo -e "Powered by ${Blue_font}www.nodeseek.com${Reset}"
+    echo "使用↑/↓或者j/k来移动光标"
+    echo "Powered by betteryjs"
 }
 
 # 加载主菜单配置（模拟从 TOML 加载）
