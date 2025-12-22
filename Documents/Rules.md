@@ -17,8 +17,7 @@
 
 ```
 VPSToolKit/
-├── config.toml              # 主配置文件
-├── vtk-interactive.sh       # 交互式菜单脚本
+
 ├── m.sh                     # 主入口脚本
 ├── install.sh               # 安装脚本
 ├── uninstall.sh             # 卸载脚本
