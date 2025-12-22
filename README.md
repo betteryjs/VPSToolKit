@@ -24,7 +24,7 @@ bash <(curl -sL https://oss.naloong.de/VPSToolKit/install.sh)
 ```
 
 ```bash
-bash <(curl -sL https://raw.githubusercontent.com/betteryjs/VPSToolKit/install.sh)
+bash <(curl -sL https://raw.githubusercontent.com/betteryjs/VPSToolKit/refs/heads/master/install.sh)
 ```
 
 安装时会提示选择下载源：
@@ -45,6 +45,10 @@ m
 
 ```bash
 bash <(curl -sL https://oss.naloong.de/VPSToolKit/uninstall.sh)
+```
+
+```bash
+bash <(curl -sL https://raw.githubusercontent.com/betteryjs/VPSToolKit/refs/heads/master/uninstall.sh)
 ```
 
 > ⚠️ **注意**：卸载操作会删除 VPSToolKit 的所有文件和配置，但不会卸载已安装的代理服务（如 Shadowsocks、Trojan 等）。
