@@ -33,21 +33,13 @@ current_menu="main"
 menu_stack=()
 
 # 检查并下载脚本
-check_and_download_script() {
+# 获取脚本的远程 URL
+get_script_url() {
     local script_path=$1
     local script_name="${script_path#${SCRIPTS_DIR}/}"
     
-    if [[ -f "$script_path" ]]; then
-        return 0
-    fi
-    
-    echo -e "${Yellow_font}[提示]${Reset} 脚本 ${script_name} 不存在，正在从远程下载..."
-    
-    # 确保目录存在
-    mkdir -p "$(dirname "$script_path")"
-    
     # 根据环境变量或默认值选择下载源
-    local download_source="${VTK_DOWNLOAD_SOURCE:-github}"
+    local download_source="${VTK_DOWNLOAD_SOURCE:-oss}"
     local download_url
     
     if [[ "${download_source}" == "oss" ]]; then
@@ -56,20 +48,7 @@ check_and_download_script() {
         download_url="https://raw.githubusercontent.com/betteryjs/VPSToolKit/master/scripts/${script_name}"
     fi
     
-    echo -e "${Yellow_font}[提示]${Reset} 下载地址：${download_url}"
-    
-    wget --no-check-certificate -O "$script_path" "$download_url" 2>&1
-    
-    if [[ $? -eq 0 && -f "$script_path" ]]; then
-        chmod +x "$script_path"
-        echo -e "${Green_font}[成功]${Reset} 脚本下载成功！"
-        sleep 1
-        return 0
-    else
-        echo -e "${Red_font}[错误]${Reset} 脚本下载失败！"
-        sleep 2
-        return 1
-    fi
+    echo "$download_url"
 }
 
 # 清屏并隐藏光标
@@ -335,17 +314,24 @@ handle_selection() {
         echo -e "${Green_font}正在执行: ${MENU_TITLES[$current_selection]}${Reset}"
         echo ""
         
-        # 检查并下载脚本（如果需要）
-        if ! check_and_download_script "$action"; then
+        # 获取脚本 URL
+        local script_url=$(get_script_url "$action")
+        echo -e "${Cyan_font}[信息]${Reset} 脚本地址：${script_url}"
+        echo -e "${Cyan_font}[信息]${Reset} 正在在线执行脚本（不保存到本地）..."
+        echo ""
+        
+        # 直接通过 curl 在线执行，不保存到本地
+        bash <(curl -sL "$script_url")
+        local exit_code=$?
+        
+        if [ $exit_code -ne 0 ]; then
             echo ""
+            echo -e "${Red_font}[错误]${Reset} 脚本执行失败或网络错误！"
             echo -e "${Yellow_font}按回车键返回菜单...${Reset}"
             read
             hide_cursor
             return
         fi
-        
-        # 执行脚本
-        bash "$action"
         
         # 二级菜单
         echo ""
