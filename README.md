@@ -208,8 +208,8 @@ m
 
 ## 📮 联系方式
 
-- **Issues**：[GitHub Issues](https://github.com/yourusername/VPSToolKit/issues)
-- **讨论**：[GitHub Discussions](https://github.com/yourusername/VPSToolKit/discussions)
+- **Issues**：[GitHub Issues](https://github.com/betteryjs/VPSToolKit/issues)
+- **讨论**：[GitHub Discussions](https://github.com/betteryjs/VPSToolKit/discussions)
 
 ## 🙏 致谢
 

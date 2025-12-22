@@ -104,7 +104,7 @@ download_main_script(){
 		scripts_base_url="https://raw.githubusercontent.com/betteryjs/VPSToolKit/master/scripts"
 	else
 		download_url="${GITHUB_RAW}/m.sh"
-		scripts_base_url="https://oss.naloong.de/sh/scripts"
+		scripts_base_url="https://oss.naloong.de/sh/vps"
 	fi
 	
 	# 下载主脚本
