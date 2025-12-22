@@ -20,6 +20,12 @@ Reset="\033[0m"
 CONFIG_DIR="/etc/vpstoolkit"
 CONFIG_FILE="${CONFIG_DIR}/config.toml"
 SCRIPTS_DIR="/usr/local/vpstoolkit/scripts"
+ENV_FILE="${CONFIG_DIR}/env"
+
+# 加载环境变量配置
+if [ -f "${ENV_FILE}" ]; then
+    source "${ENV_FILE}"
+fi
 
 # 菜单项数组
 declare -a MENU_IDS
