@@ -149,7 +149,7 @@ download_main_script() {
 
 # 显示使用说明
 show_usage() {
-	clear
+	#clear
 	echo -e "
 ========================================
     VPSToolKit 安装完成！
@@ -189,7 +189,7 @@ ${Green}项目地址：${Reset}
 
 # 主函数
 main() {
-	clear
+	#clear
 	echo -e "
 ========================================
     VPSToolKit 安装脚本
