@@ -197,27 +197,25 @@ load_proxy_menu() {
     MENU_TITLES=()
     declare -gA MENU_ACTIONS
     
-    local script_base="/usr/local/vpstoolkit/scripts/proxy"
-    
     MENU_IDS+=("proxy_anytls")
     MENU_TITLES+=("AnyTLS 管理")
-    MENU_ACTIONS["proxy_anytls"]="${script_base}/anytls.sh"
+    MENU_ACTIONS["proxy_anytls"]="scripts/proxy/anytls.sh"
     
     MENU_IDS+=("proxy_ss")
     MENU_TITLES+=("Shadowsocks 管理")
-    MENU_ACTIONS["proxy_ss"]="${script_base}/ss.sh"
+    MENU_ACTIONS["proxy_ss"]="scripts/proxy/ss.sh"
     
     MENU_IDS+=("proxy_trojan")
     MENU_TITLES+=("Trojan-Go 管理")
-    MENU_ACTIONS["proxy_trojan"]="${script_base}/trojan.sh"
+    MENU_ACTIONS["proxy_trojan"]="scripts/proxy/trojan.sh"
     
     MENU_IDS+=("proxy_snell4")
     MENU_TITLES+=("Snell v4 管理")
-    MENU_ACTIONS["proxy_snell4"]="${script_base}/snell4.sh"
+    MENU_ACTIONS["proxy_snell4"]="scripts/proxy/snell4.sh"
     
     MENU_IDS+=("proxy_snell5")
     MENU_TITLES+=("Snell v5 管理")
-    MENU_ACTIONS["proxy_snell5"]="${script_base}/snell5.sh"
+    MENU_ACTIONS["proxy_snell5"]="scripts/proxy/snell5.sh"
 }
 
 # 加载系统工具菜单
@@ -226,15 +224,13 @@ load_system_menu() {
     MENU_TITLES=()
     declare -gA MENU_ACTIONS
     
-    local script_base="/usr/local/vpstoolkit/scripts/system"
-    
     MENU_IDS+=("system_bbr")
     MENU_TITLES+=("BBR 加速管理")
-    MENU_ACTIONS["system_bbr"]="${script_base}/bbr.sh"
+    MENU_ACTIONS["system_bbr"]="scripts/system/bbr.sh"
     
     MENU_IDS+=("system_dd")
     MENU_TITLES+=("DD 重装系统")
-    MENU_ACTIONS["system_dd"]="${script_base}/dd.sh"
+    MENU_ACTIONS["system_dd"]="scripts/system/dd.sh"
 }
 
 # 加载实用工具菜单
@@ -243,11 +239,9 @@ load_utility_menu() {
     MENU_TITLES=()
     declare -gA MENU_ACTIONS
     
-    local script_base="/usr/local/vpstoolkit/scripts/tools"
-    
     MENU_IDS+=("tools_speedtest")
     MENU_TITLES+=("Speedtest 网络测速")
-    MENU_ACTIONS["tools_speedtest"]="${script_base}/speedtest.sh"
+    MENU_ACTIONS["tools_speedtest"]="scripts/tools/speedtest.sh"
 }
 
 # 加载菜单

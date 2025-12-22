@@ -24,22 +24,10 @@ VPSToolKit 是一个面向 VPS 服务器管理的开源脚本工具集，提供�
 bash <(curl -sL https://oss.naloong.de/VPSToolKit/install.sh)
 ```
 
-或使用 wget：
-
-```bash
-bash <(wget -qO- https://oss.naloong.de/VPSToolKit/install.sh)
-```
-
 **方式二：GitHub Raw（国外推荐）**
 
 ```bash
 bash <(curl -sL https://raw.githubusercontent.com/betteryjs/VPSToolKit/master/install.sh)
-```
-
-或使用 wget：
-
-```bash
-bash <(wget -qO- https://raw.githubusercontent.com/betteryjs/VPSToolKit/master/install.sh)
 ```
 
 > 💡 **提示**：安装时会提示选择下载源，可根据网络环境选择 GitHub Raw 或 OSS CDN。
