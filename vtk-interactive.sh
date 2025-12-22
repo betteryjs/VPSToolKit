@@ -518,6 +518,10 @@ render_menu() {
 handle_selection() {
     local selected_id="${MENU_IDS[$current_selection]}"
     
+    # 调试信息
+    # echo "Debug: selected_id=$selected_id, has_children=${MENU_CHILDREN[$selected_id]}" >&2
+    # read -p "Press enter to continue..."
+    
     # 检查是否有子菜单
     if [ "${MENU_CHILDREN[$selected_id]}" = "1" ]; then
         menu_stack+=("$current_menu")
