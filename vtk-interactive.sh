@@ -65,18 +65,7 @@ clear_below() {
 # 显示标题
 show_header() {
     clear
-    echo -e "${Cyan_font}"
-    cat << 'EOF'
-██╗   ██╗██████╗ ███████╗████████╗ ██████╗  ██████╗ ██╗     ██╗  ██╗██╗████████╗
-██║   ██║██╔══██╗██╔════╝╚══██╔══╝██╔═══██╗██╔═══██╗██║     ██║ ██╔╝██║╚══██╔══╝
-██║   ██║██████╔╝███████╗   ██║   ██║   ██║██║   ██║██║     █████╔╝ ██║   ██║   
-╚██╗ ██╔╝██╔═══╝ ╚════██║   ██║   ██║   ██║██║   ██║██║     ██╔═██╗ ██║   ██║   
- ╚████╔╝ ██║     ███████║   ██║   ╚██████╔╝╚██████╔╝███████╗██║  ██╗██║   ██║   
-  ╚═══╝  ╚═╝     ╚══════╝   ╚═╝    ╚═════╝  ╚═════╝ ╚══════╝╚═╝  ╚═╝╚═╝   ╚═╝   
-EOF
-    echo -e "${Reset}"
-    echo -e "${Yellow_font}VPS 服务统一管理脚本 v2.0.0${Reset}"
-    echo ""
+    # 不显示大的 ASCII banner，保持简洁
 }
 
 # 显示菜单标题
@@ -122,11 +111,26 @@ show_exit_item() {
 show_help() {
     echo ""
     echo -e "${Cyan_font}━━━━━━━━━━ 提醒 ━━━━━━━━━━${Reset}"
-    if [ ${#menu_stack[@]} -gt 0 ]; then
-        echo "回车进入${current_menu}菜单"
+    
+    # 根据当前选择显示不同的提示
+    if [ $current_selection -lt ${#MENU_IDS[@]} ]; then
+        local selected_id="${MENU_IDS[$current_selection]}"
+        local selected_title="${MENU_TITLES[$current_selection]}"
+        
+        # 检查是否有子菜单
+        if [ "${MENU_CHILDREN[$selected_id]}" = "1" ]; then
+            echo "回车进入${selected_title}菜单"
+        else
+            echo "回车执行${selected_title}"
+        fi
     else
-        echo "回车进入主菜单"
+        if [ ${#menu_stack[@]} -gt 0 ]; then
+            echo "回车返回上级菜单"
+        else
+            echo "回车退出程序"
+        fi
     fi
+    
     echo ""
     echo -e "使用${Green_font}↑/↓${Reset}或者${Green_font}j/k${Reset}来移动光标"
     echo -e "Powered by ${Blue_font}www.nodeseek.com${Reset}"
