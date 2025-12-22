@@ -288,7 +288,7 @@ handle_selection() {
         echo ""
         echo -e "${Yellow}执行命令：${Reset}bash <(curl -sL \"${script_url}\")"
         echo ""
-        sleep 2
+        sleep 5
         # 在线执行脚本
         bash <(curl -sL "${script_url}")
         
