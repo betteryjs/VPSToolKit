@@ -36,8 +36,6 @@ bash <(curl -sL https://raw.githubusercontent.com/betteryjs/VPSToolKit/refs/head
 安装完成后，运行以下命令启动主菜单：
 
 ```bash
-vtk
-# 或
 m
 ```
 
@@ -88,10 +86,15 @@ VPSToolKit/
 ├── LICENSE                  # 许可证文件
 ├── install.sh              # 一键安装脚本
 ├── uninstall.sh            # 卸载脚本
-├── vtk                     # 主入口脚本
-├── m.sh                    # 兼容旧版入口脚本
+├── m.sh                    # 主入口脚本
 ├── menu.sh                 # 交互式菜单核心脚本
 ├── version                 # 版本号文件
+├── Documents/              # 文档目录
+│   ├── CHANGELOG.md       # 更新日志
+│   ├── CONTRIBUTING.md    # 贡献指南
+│   ├── DEVELOPMENT.md     # 开发指南
+│   ├── INTERACTIVE.md     # 交互式菜单说明
+│   └── MOUDULES.D.README.md # 模块配置说明
 ├── modules.d/              # 模块配置目录
 │   ├── menu.toml          # 主菜单配置
 │   ├── proxy.toml         # 代理服务模块
@@ -244,15 +247,17 @@ titles = [
 
 ### 菜单加载流程
 
-1. **启动入口**：运行 `vtk` 或 `m` 命令
+1. **启动入口**：运行 `m` 命令
 2. **检查更新**：比对本地和远程版本号
 3. **加载主菜单**：解析 `modules.d/menu.toml`
    - 读取 `sub_menus` 数组获取模块 ID
    - 读取 `titles` 数组获取模块标题
+   - 显示面包屑导航：`主菜单 > 代理服务管理`
 4. **加载子菜单**：用户选择模块后
    - 查找对应的 `.toml` 文件（如 `proxy.toml`）
    - 解析 `[[menu]]` 节点获取菜单项
    - 从 `[scripts]` 部分获取脚本路径
+   - 实时显示执行预览信息
 5. **执行脚本**：用户选择具体功能后
    - 根据下载源生成完整 URL
    - 使用 `bash <(curl -sL URL)` 在线执行
@@ -273,7 +278,7 @@ bash <(curl -sL "https://raw.githubusercontent.com/betteryjs/VPSToolKit/master/s
 
 ```bash
 # 启动主菜单
-vtk
+m
 
 # 1. 选择「代理服务管理」
 # 2. 选择「Shadowsocks 管理」
@@ -296,7 +301,7 @@ m
 
 ```bash
 # 启动主菜单
-vtk
+m
 
 # 1. 选择「实用工具」
 # 2. 选择「Speedtest 测速」
@@ -324,7 +329,7 @@ bash <(curl -sL https://oss.naloong.de/VPSToolKit/install.sh)
 
 ### 如何更新到最新版本？
 
-运行 `vtk` 或 `m` 命令时会自动检测更新，按提示操作即可。
+运行 `m` 命令时会自动检测更新，按提示操作即可。
 
 或手动重新安装：
 

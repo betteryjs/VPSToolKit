@@ -8,13 +8,11 @@
 ## [Unreleased]
 
 ### 计划功能
-- [ ] vtkCore 核心引擎开发（Go 语言）
 - [ ] Hysteria 代理支持
 - [ ] Xray 代理支持
 - [ ] Docker 容器管理
 - [ ] 系统监控面板
 - [ ] 自动备份功能
-- [ ] Web 管理界面
 
 ## [2.0.0] - 2024-12-23
 
@@ -26,15 +24,24 @@ VPSToolKit 2.0 采用全新的模块化架构，灵感来自 [NodeScriptKit](htt
 
 - ✨ **模块化架构**：使用 TOML 配置文件管理菜单和脚本
 - ✨ **配置文件系统**：
-  - `config.toml` - 主配置文件
-  - `modules.d/default/` - 官方默认模块（更新时覆盖）
-  - `modules.d/extend/` - 用户自定义模块（更新时保留）
-- ✨ **灵活扩展**：支持本地扩展和远程订阅
-- ✨ **新入口脚本**：`vtk.sh`（需要 vtkCore）
+  - `modules.d/menu.toml` - 主菜单配置
+  - `modules.d/proxy.toml` - 代理服务模块
+  - `modules.d/system.toml` - 系统工具模块
+  - `modules.d/tools.toml` - 实用工具模块
+- ✨ **在线执行**：所有脚本通过 `bash <(curl -sL URL)` 在线执行
+- ✨ **交互式菜单**：
+  - 面包屑导航：`主菜单 > 代理服务管理`
+  - 实时预览：显示脚本地址和执行命令
+  - 优化性能：缓存机制消除闪烁
+- ✨ **双下载源**：支持 OSS CDN 和 GitHub Raw
+- ✨ **版本检测**：自动检测并提示更新
+- ✨ **统一入口**：`m` 命令作为唯一入口
 - ✨ **完善文档**：
-  - `DEVELOPMENT.md` - 开发指南
-  - 更新 `CONTRIBUTING.md` - 贡献指南
-  - 更新 `README.md` - 项目说明
+  - `Documents/DEVELOPMENT.md` - 开发指南
+  - `Documents/CONTRIBUTING.md` - 贡献指南
+  - `Documents/INTERACTIVE.md` - 交互式菜单说明
+  - `Documents/MOUDULES.D.README.md` - 模块配置说明
+  - `Documents/CHANGELOG.md` - 更新日志
 
 ### 改进
 
@@ -43,26 +50,45 @@ VPSToolKit 2.0 采用全新的模块化架构，灵感来自 [NodeScriptKit](htt
   - `scripts/system/` - 系统工具脚本
   - `scripts/tools/` - 实用工具脚本
 - 🔧 **脚本优化**：
-  - 更新 `m.sh` 支持新目录结构
-  - 更新 `install.sh` 支持配置文件安装
-  - 改进下载逻辑，支持多源下载
+  - `m.sh` - 主入口脚本（检查更新）
+  - `menu.sh` - 交互式菜单核心脚本
+  - `install.sh` - 一键安装脚本
+  - `uninstall.sh` - 卸载脚本
+- 🔧 **性能优化**：
+  - 菜单加载时缓存父菜单标题
+  - 减少文件 I/O 和 awk 处理次数
+  - 内联 URL 生成逻辑
+  - 消除选择菜单时的闪烁问题
 - 🔧 **用户体验**：
-  - 优化菜单显示
-  - 改进错误提示
-  - 支持环境变量配置
+  - 清晰的面包屑导航
+  - 实时显示执行预览
+  - 支持 vim 键位（j/k）
+  - 友好的错误提示
+
+### 技术细节
+
+- 🛠️ **纯 Bash 实现**：无需额外依赖
+- 🛠️ **TOML 解析**：使用 awk 解析配置文件
+- 🛠️ **缓存机制**：减少重复解析，提升性能
+- 🛠️ **环境变量**：`VTK_DOWNLOAD_SOURCE` 记录下载源选择
 
 ### 兼容性
 
-- ✅ **向后兼容**：保持旧版 `m` 命令可用
+- ✅ **向后兼容**：保持 `m` 命令可用
 - ✅ **平滑升级**：自动处理目录结构变更
 - ✅ **脚本保持不变**：`scripts/` 目录下所有脚本功能保持一致
+
+### 移除
+
+- ❌ **移除 vtk 命令**：统一使用 `m` 命令
+- ❌ **移除本地脚本存储**：改为在线执行
 
 ### 文档
 
 - 📝 完整的项目架构说明
-- 📝 详细的开发指南和示例
+- 📝 详细的交互式菜单使用指南
 - 📝 配置文件使用说明
-- 📝 扩展和订阅教程
+- 📝 扩展开发教程
 
 ## [1.0.0] - 2024-12-23
 
@@ -74,7 +100,8 @@ VPSToolKit 2.0 采用全新的模块化架构，灵感来自 [NodeScriptKit](htt
 - 📝 完整项目文档
 
 ### 代理服务
-- ✅ Shadowsocks Rust 管理脚本
+- ✅ AnyTLS 管理脚本
+- ✅ Shadowsocks 管理脚本
 - ✅ Trojan-Go 管理脚本（支持 WebSocket 和 TLS 模式）
 - ✅ Snell v4 管理脚本
 - ✅ Snell v5 管理脚本
