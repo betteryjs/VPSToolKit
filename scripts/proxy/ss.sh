@@ -510,6 +510,14 @@ view_status(){
 	start_menu
 }
 
+view_log(){
+	check_installed_status
+	echo -e "${Info} 查看 Shadowsocks Rust 日志..."
+	echo -e "${Tip} 按 Ctrl+C 退出查看"
+	sleep 2s
+	journalctl -u ss-rust -f --no-pager
+}
+
 start_menu(){
 	clear
 	check_root
@@ -546,11 +554,12 @@ start_menu(){
  ${Green_font_prefix}7.${Font_color_suffix}  修改 Shadowsocks Rust 配置
  ${Green_font_prefix}8.${Font_color_suffix}  查看 Shadowsocks Rust 配置
  ${Green_font_prefix}9.${Font_color_suffix}  查看 Shadowsocks Rust 状态
+ ${Green_font_prefix}10.${Font_color_suffix}  查看 Shadowsocks Rust 日志
 ————————————————————————————————————————
  ${Green_font_prefix}0.${Font_color_suffix} 退出脚本
 ========================================" && echo
 	
-	read -e -p " 请输入数字 [0-9]：" num
+	read -e -p " 请输入数字 [0-10]：" num
 	case "$num" in
 		1)
 		install
@@ -579,11 +588,14 @@ start_menu(){
 		9)
 		view_status
 		;;
+		10)
+		view_log
+		;;
 		0)
 		return
 		;;
 		*)
-		echo -e "${Error} 请输入正确的数字 [0-9]"
+		echo -e "${Error} 请输入正确的数字 [0-10]"
 		sleep 2s
 		start_menu
 		;;

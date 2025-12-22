@@ -58,6 +58,24 @@ m
 bash /usr/local/bin/m.sh
 ```
 
+### 卸载
+
+如需卸载 VPSToolKit，运行以下命令：
+
+**方式一：OSS CDN（国内推荐）**
+
+```bash
+bash <(curl -sL https://oss.naloong.de/VPSToolKit/uninstall.sh)
+```
+
+**方式二：GitHub Raw（国外推荐）**
+
+```bash
+bash <(curl -sL https://raw.githubusercontent.com/betteryjs/VPSToolKit/master/uninstall.sh)
+```
+
+> ⚠️ **注意**：卸载操作会删除 VPSToolKit 的所有文件和配置，但不会卸载已安装的代理服务（如 Shadowsocks、Trojan 等）。如需完全清理，请先使用各服务的卸载功能。
+
 ### 🎮 交互式菜单
 
 VPSToolKit 2.0 提供了类似 NodeScriptKit 的交互式菜单体验：
