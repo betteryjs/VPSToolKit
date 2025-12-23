@@ -245,7 +245,9 @@ load_submenu() {
         # 通过 key 获取脚本路径
         if [ -n "$script_key" ]; then
             local script_path=$(parse_toml_value "$submenu_file" "scripts" "$script_key")
-            MENU_SCRIPTS["$item_id"]="$script_path"
+            if [ -n "$script_path" ]; then
+                MENU_SCRIPTS["$item_id"]="$script_path"
+            fi
         fi
     done <<< "$item_ids"
     
@@ -371,7 +373,12 @@ handle_selection() {
         local script_path="${MENU_SCRIPTS[$selected_id]}"
         
         if [ -z "$script_path" ]; then
+            clear
             echo -e "${Red}[错误]${Reset} 脚本路径未配置"
+            echo -e "${Yellow}[调试信息]${Reset}"
+            echo -e "  菜单ID: $selected_id"
+            echo -e "  配置文件: 请检查对应的 .toml 文件"
+            echo ""
             read -p "按回车继续..."
             return
         fi
@@ -382,6 +389,8 @@ handle_selection() {
         echo -e "${Cyan}======================================${Reset}"
         echo -e "${Green}[执行中]${Reset} ${MENU_TITLES[$selected_index]}"
         echo -e "${Cyan}======================================${Reset}"
+        echo -e "${Cyan}脚本路径：${Reset}${script_path}"
+        echo -e "${Cyan}脚本地址：${Reset}${script_url}"
         echo ""
         
         # 在线执行脚本
