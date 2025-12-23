@@ -34,32 +34,40 @@ current_selection=0
 current_menu="main"
 parent_menu_title=""
 
-# 解析 TOML 数组
+# 解析 TOML 数组（兼容多种格式）
 parse_toml_array() {
     local file=$1
     local key=$2
     
+    # 使用 grep 和 sed 的组合，更兼容
+    grep -A 20 "${key}[[:space:]]*=" "$file" | \
     awk -v key="$key" '
-    BEGIN { in_array=0 }
-    $0 ~ "^[[:space:]]*" key "[[:space:]]*=[[:space:]]*\\[" {
-        in_array=1
-        if ($0 ~ /\]/) {
-            match($0, /\[([^\]]*)\]/, arr)
-            content = arr[1]
-            gsub(/"/, "", content)
-            gsub(/,/, "\n", content)
-            gsub(/^[[:space:]]+|[[:space:]]+$/, "", content)
-            print content
+    BEGIN { in_array=0; found=0 }
+    $0 ~ key "[[:space:]]*=" {
+        found=1
+        # 单行数组格式
+        if ($0 ~ /\[.*\]/) {
+            line = $0
+            sub(/.*\[/, "[", line)
+            sub(/\].*/, "]", line)
+            gsub(/[\[\]]/, "", line)
+            gsub(/"/, "", line)
+            gsub(/,[[:space:]]*/, "\n", line)
+            print line
             exit
         }
+        in_array=1
         next
     }
     in_array {
         if ($0 ~ /\]/) { exit }
-        gsub(/^[[:space:]]*"|"[[:space:]]*,?[[:space:]]*$/, "")
+        gsub(/^[[:space:]]*/, "")
+        gsub(/[[:space:]]*,?[[:space:]]*$/, "")
+        gsub(/"/, "")
         if ($0 != "") print $0
     }
-    ' "$file"
+    !found && /^\[/ { exit }
+    ' | grep -v '^[[:space:]]*$'
 }
 
 # 解析 TOML 键值对
