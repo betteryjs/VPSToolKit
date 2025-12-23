@@ -39,35 +39,43 @@ parse_toml_array() {
     local file=$1
     local key=$2
     
-    # 使用 grep 和 sed 的组合，更兼容
-    grep -A 20 "${key}[[:space:]]*=" "$file" | \
-    awk -v key="$key" '
-    BEGIN { in_array=0; found=0 }
+    # 方法1: 尝试使用 awk（大多数系统）
+    local result=$(awk -v key="$key" '
+    BEGIN { in_array=0 }
     $0 ~ key "[[:space:]]*=" {
-        found=1
-        # 单行数组格式
+        # 单行数组格式: key = ["a", "b", "c"]
         if ($0 ~ /\[.*\]/) {
             line = $0
-            sub(/.*\[/, "[", line)
-            sub(/\].*/, "]", line)
-            gsub(/[\[\]]/, "", line)
+            sub(/.*\[/, "", line)
+            sub(/\].*/, "", line)
             gsub(/"/, "", line)
             gsub(/,[[:space:]]*/, "\n", line)
+            gsub(/^[[:space:]]+|[[:space:]]+$/, "", line)
             print line
             exit
         }
+        # 多行数组格式
         in_array=1
         next
     }
     in_array {
         if ($0 ~ /\]/) { exit }
-        gsub(/^[[:space:]]*/, "")
-        gsub(/[[:space:]]*,?[[:space:]]*$/, "")
-        gsub(/"/, "")
-        if ($0 != "") print $0
+        gsub(/^[[:space:]]*"?/, "")
+        gsub(/"?[[:space:]]*,?[[:space:]]*$/, "")
+        if (length($0) > 0) print $0
     }
-    !found && /^\[/ { exit }
-    ' | grep -v '^[[:space:]]*$'
+    ' "$file" 2>/dev/null)
+    
+    # 方法2: 如果 awk 失败，尝试使用 sed 和 grep
+    if [ -z "$result" ]; then
+        result=$(sed -n "/^[[:space:]]*${key}[[:space:]]*=/,/\]/p" "$file" 2>/dev/null | \
+                 grep -v "^[[:space:]]*${key}" | \
+                 grep -v "\]" | \
+                 sed 's/^[[:space:]]*"//;s/"[[:space:]]*,*[[:space:]]*$//' | \
+                 grep -v '^$')
+    fi
+    
+    echo "$result"
 }
 
 # 解析 TOML 键值对
@@ -118,13 +126,21 @@ load_main_menu() {
     local menu_file="${MODULES_DIR}/menu.toml"
     
     if [ ! -f "$menu_file" ]; then
-        echo -e "${Red}[错误]${Reset} 主菜单配置文件不存在"
+        echo -e "${Red}[错误]${Reset} 主菜单配置文件不存在: $menu_file"
         exit 1
     fi
     
     # 读取子菜单 ID
     local ids=$(parse_toml_array "$menu_file" "sub_menus")
     local titles=$(parse_toml_array "$menu_file" "titles")
+    
+    # 调试：检查是否读取到数据
+    if [ -z "$ids" ]; then
+        echo -e "${Red}[错误]${Reset} 无法从配置文件读取菜单数据"
+        echo -e "${Yellow}[调试]${Reset} 配置文件: $menu_file"
+        echo -e "${Yellow}[调试]${Reset} 请检查配置文件格式是否正确"
+        exit 1
+    fi
     
     # 转为数组
     while IFS= read -r line; do
@@ -134,6 +150,12 @@ load_main_menu() {
     while IFS= read -r line; do
         [ -n "$line" ] && MENU_TITLES+=("$line")
     done <<< "$titles"
+    
+    # 检查菜单是否为空
+    if [ ${#MENU_IDS[@]} -eq 0 ]; then
+        echo -e "${Red}[错误]${Reset} 菜单配置为空"
+        exit 1
+    fi
 }
 
 # 加载子菜单

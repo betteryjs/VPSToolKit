@@ -102,7 +102,7 @@ ${Green}重新安装：${Reset}
   bash <(curl -Ls https://oss.naloong.de/VPSToolKit/install.sh)
 
 
-  bash <(curl -sL https://raw.githubusercontent.com/betteryjs/VPSToolKit/refs/heads/master/uninstall.sh)
+  bash <(curl -sL https://raw.githubusercontent.com/betteryjs/VPSToolKit/refs/heads/master/install.sh)
 
 
 ========================================
