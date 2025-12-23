@@ -1,14 +1,43 @@
 #!/bin/bash
 
-# 一键DD脚本 - Debian 12
+# 一键DD脚本 - Debian
 # 默认配置
 DEFAULT_PORT=22
 DEFAULT_OS="debian"
-DEFAULT_VERSION=12
 
-# 显示菜单
+# 显示版本选择菜单
 echo "=========================================="
-echo "      一键DD系统安装脚本 - Debian 12"
+echo "      一键DD系统安装脚本 - Debian"
+echo "=========================================="
+echo "请选择Debian版本："
+echo "1. Debian 12 (Bookworm) - 推荐"
+echo "2. Debian 13 (Trixie) - 测试版"
+echo "=========================================="
+read -p "请输入选项 [1-2]: " version_choice
+
+# 验证版本输入
+if [[ ! "$version_choice" =~ ^[1-2]$ ]]; then
+    echo "错误：无效的选项，请输入1或2"
+    exit 1
+fi
+
+# 设置版本
+case $version_choice in
+    1)
+        DEFAULT_VERSION=12
+        VERSION_NAME="Debian 12 (Bookworm)"
+        ;;
+    2)
+        DEFAULT_VERSION=13
+        VERSION_NAME="Debian 13 (Trixie)"
+        ;;
+esac
+
+echo ""
+echo "已选择: $VERSION_NAME"
+echo ""
+
+# 显示安装源菜单
 echo "=========================================="
 echo "请选择安装源："
 echo "1. GitHub脚本 - 默认源"
@@ -53,9 +82,9 @@ done
 echo ""
 echo "=========================================="
 echo "配置确认："
-echo "端口: $PORT"
-echo "密码: ********"
-echo "系统: Debian $DEFAULT_VERSION"
+echo "系统版本: $VERSION_NAME"
+echo "SSH端口: $PORT"
+echo "Root密码: ********"
 echo "=========================================="
 
 # 根据选择执行相应的命令
