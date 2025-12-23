@@ -102,18 +102,30 @@ parse_menu_item() {
     local item_id=$2
     local field=$3
     
-    awk -v id="$item_id" -v field="$field" '
-    /^\[\[menu\]\]/ { in_menu=1; found=0; next }
-    in_menu && /^id = / {
-        if ($0 ~ id) { found=1 }
-        else { found=0; in_menu=0 }
+    grep -A 20 '^\[\[menu\]\]' "$file" | awk -v id="$item_id" -v field="$field" '
+    BEGIN { found=0 }
+    /^\[\[menu\]\]/ { 
+        found=0
+        next 
+    }
+    /^id = / {
+        gsub(/"/, "", $0)
+        gsub(/id = /, "", $0)
+        gsub(/^[[:space:]]+|[[:space:]]+$/, "", $0)
+        if ($0 == id) { 
+            found=1 
+        } else { 
+            found=0 
+        }
+        next
     }
     found && $0 ~ "^" field " = " {
-        match($0, /"([^"]*)"/, arr)
-        print arr[1]
+        gsub(/"/, "", $0)
+        sub(/^[^=]*= */, "", $0)
+        print $0
         exit
     }
-    ' "$file"
+    '
 }
 
 # 加载主菜单
@@ -209,6 +221,14 @@ load_submenu() {
     # 读取子菜单项
     local item_ids=$(parse_toml_array "$submenu_file" "sub_menus")
     
+    # 调试信息
+    if [ -z "$item_ids" ]; then
+        echo -e "${Red}[错误]${Reset} 无法从配置文件读取子菜单项" >&2
+        echo -e "${Yellow}[调试]${Reset} 配置文件: $submenu_file" >&2
+        echo -e "${Yellow}[调试]${Reset} 菜单ID: $menu_id" >&2
+        return 1
+    fi
+    
     while IFS= read -r item_id; do
         [ -z "$item_id" ] && continue
         
@@ -227,6 +247,13 @@ load_submenu() {
             MENU_SCRIPTS["$item_id"]="$script_path"
         fi
     done <<< "$item_ids"
+    
+    # 检查是否成功加载菜单项
+    if [ ${#MENU_IDS[@]} -eq 0 ]; then
+        echo -e "${Red}[错误]${Reset} 子菜单配置为空" >&2
+        echo -e "${Yellow}[调试]${Reset} 请检查配置文件格式" >&2
+        return 1
+    fi
 }
 
 # 获取脚本 URL
