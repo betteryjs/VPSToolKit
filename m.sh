@@ -89,8 +89,9 @@ parse_toml_value() {
     $0 ~ "^\\[" section "\\]" { in_section=1; next }
     in_section && /^\[/ { in_section=0 }
     in_section && $0 ~ "^[[:space:]]*" key "[[:space:]]*=" {
-        match($0, /"([^"]*)"/, arr)
-        print arr[1]
+        gsub(/"/, "", $0)
+        sub(/^[^=]*= */, "", $0)
+        print $0
         exit
     }
     ' "$file"
